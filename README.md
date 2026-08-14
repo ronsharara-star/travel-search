@@ -1,0 +1,1 @@
+# Travel Search Mobile\n\nRender-ready FastAPI mobile web app. Build: `pip install -r requirements.txt`. Start: `uvicorn app:app --host 0.0.0.0 --port $PORT`. Add AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET as Render environment secrets. Without them, demo results are shown.\n
