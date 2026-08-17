@@ -17,7 +17,7 @@ const rates = {
   SGD: 1.28
 };
 
-const sym = {
+const symbols = {
   USD: "$",
   ILS: "₪",
   THB: "฿",
@@ -30,54 +30,6 @@ const sym = {
   SGD: "S$"
 };
 
-function money(value) {
-  const number = Math.round(Number(value) * rates[currency]);
-  return (sym[currency] || "") + number.toLocaleString();
-}
-
-
-/* =========================
-   CURRENCY
-========================= */
-
-$("currency").onchange = e => {
-  currency = e.target.value;
-
-  if (document.getElementById("flightResults").innerHTML) {
-    $("fs").click();
-  }
-
-  if (document.getElementById("hotelResults").innerHTML) {
-    $("hs").click();
-  }
-};
-
-
-/* =========================
-   TABS
-========================= */
-
-$("fb").onclick = () => {
-  $("flights").hidden = false;
-  $("hotels").hidden = true;
-};
-
-$("hb").onclick = () => {
-  $("flights").hidden = true;
-  $("hotels").hidden = false;
-
-  setTimeout(() => {
-    if (map) {
-      map.invalidateSize();
-    }
-  }, 300);
-};
-
-
-/* =========================
-   AIRLINE NAMES
-========================= */
-
 const airlineNames = {
   TG: "Thai Airways",
   EK: "Emirates",
@@ -85,144 +37,153 @@ const airlineNames = {
   LY: "EL AL",
   TK: "Turkish Airlines",
   EY: "Etihad Airways",
-  AF: "Air France",
-  LH: "Lufthansa",
-  BA: "British Airways",
   SQ: "Singapore Airlines",
   CX: "Cathay Pacific",
   KL: "KLM",
-  OS: "Austrian Airlines",
-  LX: "Swiss",
-  AZ: "ITA Airways",
-  RJ: "Royal Jordanian"
+  AF: "Air France",
+  LH: "Lufthansa",
+  BA: "British Airways",
+  FR: "Ryanair",
+  W6: "Wizz Air"
 };
 
-function airlineName(code) {
-  return airlineNames[code] || code || "Unknown Airline";
+function money(value) {
+  const converted = value * rates[currency];
+  return (symbols[currency] || "") +
+    Math.round(converted).toLocaleString();
 }
 
 
-/* =========================
-   FLIGHT SEARCH
-========================= */
+/* ================= LANGUAGE ================= */
 
-$("fs").onclick = async () => {
+$("lang").onchange = function () {
 
-  const p = new URLSearchParams({
-    origin: $("from").value,
-    destination: $("to").value,
-    departure: $("dep").value,
-    return_date: $("ret").value,
-    adults: $("adults").value
-  });
+  if (this.value === "en") {
+    document.documentElement.lang = "en";
+    document.documentElement.dir = "ltr";
+  } else {
+    document.documentElement.lang = "he";
+    document.documentElement.dir = "rtl";
+  }
 
-  $("flightResults").innerHTML =
-    `<div class="loading">🔎 מחפש טיסות...</div>`;
+};
 
-  try {
 
-    const response = await fetch("/api/flights?" + p);
-    const data = await response.json();
+/* ================= CURRENCY ================= */
 
-    let results = data.results || [];
+$("currency").onchange = function () {
+  currency = this.value;
 
-    buildFlightFilters(results);
+  if (lastFlightResults.length) {
+    renderFlights(lastFlightResults);
+  }
 
-    renderFlights(results);
-
-  } catch (error) {
-
-    $("flightResults").innerHTML =
-      `<div class="card">❌ אירעה שגיאה בחיפוש</div>`;
-
+  if (lastHotelResults.length) {
+    renderHotels(lastHotelResults);
   }
 };
 
 
-/* =========================
-   FLIGHT FILTERS
-========================= */
+/* ================= TABS ================= */
 
-function buildFlightFilters(results) {
+$("fb").onclick = function () {
+  $("flights").hidden = false;
+  $("hotels").hidden = true;
+};
 
-  const container = $("flightFilters");
+$("hb").onclick = function () {
+  $("flights").hidden = true;
+  $("hotels").hidden = false;
 
-  if (!container) return;
+  setTimeout(() => {
+    if (map) map.invalidateSize();
+  }, 300);
+};
+
+
+/* ================= DATA ================= */
+
+let lastFlightResults = [];
+let lastHotelResults = [];
+
+
+/* ================= FLIGHTS SEARCH ================= */
+
+$("fs").onclick = async function () {
+
+  const button = $("fs");
+
+  button.disabled = true;
+  button.innerText = "🔄 מחפש טיסות...";
+
+  try {
+
+    const params = new URLSearchParams({
+      origin: $("from").value,
+      destination: $("to").value,
+      departure: $("dep").value,
+      return_date: $("ret").value,
+      adults: $("adults").value
+    });
+
+    const response =
+      await fetch("/api/flights?" + params);
+
+    const data = await response.json();
+
+    lastFlightResults = data.results || [];
+
+    fillAirlines(lastFlightResults);
+
+    renderFlights(lastFlightResults);
+
+  } catch (error) {
+
+    $("flightResults").innerHTML =
+      `<div class="error">
+        ❌ לא הצלחנו לבצע את החיפוש.
+      </div>`;
+
+  }
+
+  button.disabled = false;
+  button.innerText = "🔎 חפש טיסות";
+};
+
+
+/* ================= AIRLINES ================= */
+
+function fillAirlines(results) {
+
+  const select = $("airlineFilter");
 
   const airlines = [
     ...new Set(
-      results.map(x => x.airline)
+      results.map(x => x.airline).filter(Boolean)
     )
   ];
 
-  container.innerHTML = `
+  select.innerHTML =
+    `<option value="all">כל חברות התעופה</option>`;
 
-    <div class="filter-box">
+  airlines.forEach(code => {
 
-      <label>✈️ חברת תעופה</label>
+    const option = document.createElement("option");
 
-      <select id="airlineFilter">
+    option.value = code;
 
-        <option value="all">
-          כל חברות התעופה
-        </option>
+    option.textContent =
+      airlineNames[code] || code;
 
-        ${airlines.map(code => `
-          <option value="${code}">
-            ${airlineName(code)}
-          </option>
-        `).join("")}
+    select.appendChild(option);
 
-      </select>
-
-
-      <label>🛑 עצירות</label>
-
-      <select id="stopsFilter">
-
-        <option value="all">הכול</option>
-        <option value="0">ללא עצירות</option>
-        <option value="1">עצירה אחת</option>
-        <option value="2">2+ עצירות</option>
-
-      </select>
-
-
-      <label>💰 מיון</label>
-
-      <select id="flightSort">
-
-        <option value="recommended">
-          מומלץ
-        </option>
-
-        <option value="cheap">
-          הזול ביותר
-        </option>
-
-        <option value="expensive">
-          היקר ביותר
-        </option>
-
-        <option value="stops">
-          הכי מעט עצירות
-        </option>
-
-      </select>
-
-    </div>
-  `;
-
-
-  $("airlineFilter").onchange = () => applyFlightFilters(results);
-
-  $("stopsFilter").onchange = () => applyFlightFilters(results);
-
-  $("flightSort").onchange = () => applyFlightFilters(results);
+  });
 }
 
 
-function applyFlightFilters(results) {
+/* ================= FLIGHT RENDER ================= */
+
+function renderFlights(results) {
 
   let filtered = [...results];
 
@@ -232,342 +193,233 @@ function applyFlightFilters(results) {
 
 
   if (airline !== "all") {
+
     filtered = filtered.filter(
       x => x.airline === airline
     );
+
   }
 
 
   if (stops !== "all") {
 
-    if (stops === "2") {
+    filtered = filtered.filter(x => {
 
-      filtered = filtered.filter(
-        x => Number(x.stops) >= 2
-      );
+      if (stops === "2") {
+        return Number(x.stops) >= 2;
+      }
 
-    } else {
+      return Number(x.stops) === Number(stops);
 
-      filtered = filtered.filter(
-        x => Number(x.stops) === Number(stops)
-      );
-
-    }
+    });
 
   }
 
 
-  if (sort === "cheap") {
+  if (sort === "priceAsc") {
 
     filtered.sort(
-      (a, b) => Number(a.price) - Number(b.price)
+      (a,b) => Number(a.price) - Number(b.price)
+    );
+
+  }
+
+  if (sort === "priceDesc") {
+
+    filtered.sort(
+      (a,b) => Number(b.price) - Number(a.price)
     );
 
   }
 
 
-  if (sort === "expensive") {
+  $("flightResults").innerHTML = "";
 
-    filtered.sort(
-      (a, b) => Number(b.price) - Number(a.price)
-    );
-
-  }
-
-
-  if (sort === "stops") {
-
-    filtered.sort(
-      (a, b) => Number(a.stops) - Number(b.stops)
-    );
-
-  }
-
-
-  renderFlights(filtered);
-}
-
-
-/* =========================
-   FLIGHT RESULTS
-========================= */
-
-function renderFlights(results) {
-
-  if (!results.length) {
+  if (!filtered.length) {
 
     $("flightResults").innerHTML =
-      `<div class="card">
-        ❌ לא נמצאו טיסות לפי הסינון
+      `<div class="empty">
+        לא נמצאו טיסות לפי הסינון.
       </div>`;
 
     return;
   }
 
 
-  $("flightResults").innerHTML = results.map(x => `
+  $("flightResults").innerHTML =
+    filtered.map(x => {
 
-    <div class="card flight-card">
+      const airline =
+        airlineNames[x.airline] || x.airline;
 
-      <div class="row">
+      return `
+      <div class="card">
 
-        <div>
+        <div class="row">
 
-          <b>
-            ✈️ ${airlineName(x.airline)}
-          </b>
+          <div>
 
-          <div class="route">
-            ${x.origin} → ${x.destination}
+            <b>✈️ ${airline}</b>
+
+            <div class="route">
+              ${x.origin} → ${x.destination}
+            </div>
+
+            <div class="muted">
+              🕐 ${x.departure} → ${x.arrival}
+            </div>
+
+            <div class="muted">
+              🔄 ${x.stops} עצירות
+            </div>
+
           </div>
 
-          <div class="muted">
-            🕐 ${x.departure} → ${x.arrival}
+          <div class="price">
+            ${money(x.price)}
           </div>
 
-          <div class="muted">
-            🛑 ${x.stops} עצירות
-          </div>
-
-        </div>
-
-        <div class="price">
-          ${money(x.price)}
         </div>
 
       </div>
+      `;
 
-    </div>
-
-  `).join("");
+    }).join("");
 }
 
 
-/* =========================
-   HOTEL SEARCH
-========================= */
+/* ================= FLIGHT FILTER EVENTS ================= */
 
-$("hs").onclick = async () => {
+$("airlineFilter").onchange =
+  () => renderFlights(lastFlightResults);
 
-  const p = new URLSearchParams({
+$("stopsFilter").onchange =
+  () => renderFlights(lastFlightResults);
 
-    city: $("city").value,
-
-    checkin: $("checkin").value,
-
-    checkout: $("checkout").value,
-
-    guests: $("guests").value,
-
-    rooms: $("rooms").value
-
-  });
+$("flightSort").onchange =
+  () => renderFlights(lastFlightResults);
 
 
-  $("hotelResults").innerHTML =
-    `<div class="loading">
-      🔎 מחפש מלונות...
-    </div>`;
+/* ================= HOTELS SEARCH ================= */
+
+$("hs").onclick = async function () {
+
+  const button = $("hs");
+
+  button.disabled = true;
+  button.innerText = "🔄 מחפש מלונות...";
 
 
   try {
 
+    const params = new URLSearchParams({
+
+      city: $("city").value,
+
+      checkin: $("checkin").value,
+
+      checkout: $("checkout").value,
+
+      guests: $("guests").value,
+
+      rooms: $("rooms").value
+
+    });
+
+
     const response =
-      await fetch("/api/hotels?" + p);
+      await fetch("/api/hotels?" + params);
+
 
     const data =
       await response.json();
 
-    const results =
+
+    lastHotelResults =
       data.results || [];
 
 
-    buildHotelFilters(results);
+    renderHotels(lastHotelResults);
 
-    renderHotels(results);
+    updateMap(lastHotelResults);
 
-    updateMap(results);
 
   } catch (error) {
 
     $("hotelResults").innerHTML =
-      `<div class="card">
-        ❌ אירעה שגיאה בחיפוש
+      `<div class="error">
+        ❌ לא הצלחנו לבצע את החיפוש.
       </div>`;
 
   }
+
+
+  button.disabled = false;
+
+  button.innerText =
+    "🔎 חפש מלונות";
+
 };
 
 
-/* =========================
-   HOTEL FILTERS
-========================= */
+/* ================= HOTEL RENDER ================= */
 
-function buildHotelFilters(results) {
-
-  const container = $("hotelFilters");
-
-  if (!container) return;
-
-
-  container.innerHTML = `
-
-    <div class="filter-box">
-
-      <label>💰 מיון לפי מחיר</label>
-
-      <select id="hotelSort">
-
-        <option value="recommended">
-          מומלץ
-        </option>
-
-        <option value="cheap">
-          הזול ביותר
-        </option>
-
-        <option value="expensive">
-          היקר ביותר
-        </option>
-
-        <option value="rating">
-          דירוג גבוה
-        </option>
-
-        <option value="reviews">
-          הכי הרבה ביקורות
-        </option>
-
-      </select>
-
-
-      <label>⭐ דירוג מינימלי</label>
-
-      <select id="ratingFilter">
-
-        <option value="0">
-          כל הדירוגים
-        </option>
-
-        <option value="4">
-          ⭐ 4+
-        </option>
-
-        <option value="4.5">
-          ⭐ 4.5+
-        </option>
-
-      </select>
-
-
-      <label>🍳 ארוחת בוקר</label>
-
-      <select id="breakfastFilter">
-
-        <option value="all">
-          הכול
-        </option>
-
-        <option value="yes">
-          כולל ארוחת בוקר
-        </option>
-
-      </select>
-
-
-      <label>↩️ ביטול חינם</label>
-
-      <select id="cancelFilter">
-
-        <option value="all">
-          הכול
-        </option>
-
-        <option value="yes">
-          ביטול חינם
-        </option>
-
-      </select>
-
-    </div>
-
-  `;
-
-
-  $("hotelSort").onchange =
-    () => applyHotelFilters(results);
-
-  $("ratingFilter").onchange =
-    () => applyHotelFilters(results);
-
-  $("breakfastFilter").onchange =
-    () => applyHotelFilters(results);
-
-  $("cancelFilter").onchange =
-    () => applyHotelFilters(results);
-}
-
-
-function applyHotelFilters(results) {
+function renderHotels(results) {
 
   let filtered = [...results];
 
 
-  const sort = $("hotelSort").value;
-
   const rating =
     Number($("ratingFilter").value);
 
+
   const breakfast =
-    $("breakfastFilter").value;
+    $("breakfastFilter").checked;
+
 
   const cancel =
-    $("cancelFilter").value;
+    $("cancelFilter").checked;
 
 
-  if (rating > 0) {
+  const sort =
+    $("hotelSort").value;
+
+
+  filtered =
+    filtered.filter(
+      x => Number(x.rating || 0) >= rating
+    );
+
+
+  if (breakfast) {
 
     filtered =
-      filtered.filter(
-        x => Number(x.rating) >= rating
-      );
+      filtered.filter(x => x.breakfast);
 
   }
 
 
-  if (breakfast === "yes") {
+  if (cancel) {
 
     filtered =
-      filtered.filter(
-        x => x.breakfast === true
-      );
+      filtered.filter(x => x.free_cancel);
 
   }
 
 
-  if (cancel === "yes") {
-
-    filtered =
-      filtered.filter(
-        x => x.free_cancel === true
-      );
-
-  }
-
-
-  if (sort === "cheap") {
+  if (sort === "priceAsc") {
 
     filtered.sort(
-      (a, b) => Number(a.price) - Number(b.price)
+      (a,b) => Number(a.price) - Number(b.price)
     );
 
   }
 
 
-  if (sort === "expensive") {
+  if (sort === "priceDesc") {
 
     filtered.sort(
-      (a, b) => Number(b.price) - Number(a.price)
+      (a,b) => Number(b.price) - Number(a.price)
     );
 
   }
@@ -576,7 +428,7 @@ function applyHotelFilters(results) {
   if (sort === "rating") {
 
     filtered.sort(
-      (a, b) => Number(b.rating) - Number(a.rating)
+      (a,b) => Number(b.rating) - Number(a.rating)
     );
 
   }
@@ -585,67 +437,51 @@ function applyHotelFilters(results) {
   if (sort === "reviews") {
 
     filtered.sort(
-      (a, b) => Number(b.reviews) - Number(a.reviews)
+      (a,b) => Number(b.reviews) - Number(a.reviews)
     );
 
   }
 
 
-  renderHotels(filtered);
-
-  updateMap(filtered);
-}
+  $("hotelResults").innerHTML = "";
 
 
-/* =========================
-   HOTEL RESULTS
-========================= */
-
-function renderHotels(results) {
-
-  if (!results.length) {
+  if (!filtered.length) {
 
     $("hotelResults").innerHTML =
-      `<div class="card">
-        ❌ לא נמצאו מלונות לפי הסינון
+      `<div class="empty">
+        לא נמצאו מלונות לפי הסינון.
       </div>`;
 
     return;
+
   }
 
 
   $("hotelResults").innerHTML =
-    results.map(x => `
+    filtered.map(x => `
 
-      <div class="card hotel-card">
+      <div class="card">
 
         <div class="row">
 
           <div>
 
-            <b>
-              🏨 ${x.name}
-            </b>
+            <b>🏨 ${x.name}</b>
 
             <div>
-              ⭐ ${x.rating || "N/A"}
+              ⭐ ${x.rating || 0}
             </div>
 
             <div class="muted">
-              ${x.reviews || 0} ביקורות
+              📝 ${x.reviews || 0} reviews
             </div>
 
-            ${x.breakfast ? `
-              <div class="feature">
-                🍳 ארוחת בוקר
-              </div>
-            ` : ""}
+            ${x.breakfast ?
+              `<div class="good">🍳 ארוחת בוקר</div>` : ""}
 
-            ${x.free_cancel ? `
-              <div class="feature">
-                ↩️ ביטול חינם
-              </div>
-            ` : ""}
+            ${x.free_cancel ?
+              `<div class="good">✅ ביטול חינם</div>` : ""}
 
           </div>
 
@@ -654,7 +490,7 @@ function renderHotels(results) {
             ${money(x.price)}
 
             <div class="muted">
-              /לילה
+              ללילה
             </div>
 
           </div>
@@ -664,29 +500,45 @@ function renderHotels(results) {
       </div>
 
     `).join("");
+
 }
 
 
-/* =========================
-   REAL MAP
-========================= */
+/* ================= HOTEL FILTER EVENTS ================= */
+
+$("ratingFilter").onchange =
+  () => renderHotels(lastHotelResults);
+
+$("hotelSort").onchange =
+  () => renderHotels(lastHotelResults);
+
+$("breakfastFilter").onchange =
+  () => renderHotels(lastHotelResults);
+
+$("cancelFilter").onchange =
+  () => renderHotels(lastHotelResults);
+
+
+/* ================= MAP ================= */
 
 function updateMap(results) {
 
   if (!map) {
 
     map = L.map("map").setView(
-      [13.74, 100.53],
+      [13.74,100.53],
       11
     );
 
+
+    /* THIS WAS MISSING BEFORE */
 
     L.tileLayer(
       "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
         maxZoom: 19,
         attribution:
-          '&copy; OpenStreetMap contributors'
+          "&copy; OpenStreetMap"
       }
     ).addTo(map);
 
@@ -709,12 +561,17 @@ function updateMap(results) {
   valid.forEach(x => {
 
     const marker =
-      L.marker([x.lat, x.lon])
-        .addTo(map)
-        .bindPopup(`
-          <b>${x.name}</b><br>
-          ⭐ ${x.rating || ""}
-        `);
+      L.marker([
+        Number(x.lat),
+        Number(x.lon)
+      ])
+      .addTo(map)
+      .bindPopup(
+        `<b>${x.name}</b><br>
+         ⭐ ${x.rating || 0}<br>
+         ${money(x.price)} / night`
+      );
+
 
     markers.push(marker);
 
@@ -724,7 +581,10 @@ function updateMap(results) {
   if (valid.length) {
 
     map.setView(
-      [valid[0].lat, valid[0].lon],
+      [
+        Number(valid[0].lat),
+        Number(valid[0].lon)
+      ],
       12
     );
 
@@ -735,4 +595,5 @@ function updateMap(results) {
     () => map.invalidateSize(),
     300
   );
-}
+
+        }
