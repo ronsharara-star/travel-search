@@ -169,3 +169,47 @@ h1 {
     font-size: 20px;
   }
 }
+.filter-box {
+  background: white;
+  margin: 10px 15px;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 2px 8px #0001;
+}
+
+.filter-box label {
+  display: block;
+  font-weight: 800;
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.filter-box select {
+  width: 100%;
+  padding: 13px;
+  border-radius: 11px;
+  border: 1px solid #d1d5db;
+  background: white;
+  font-size: 16px;
+}
+
+.loading {
+  background: white;
+  margin: 15px;
+  padding: 20px;
+  border-radius: 15px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.route {
+  font-size: 17px;
+  font-weight: 700;
+  margin-top: 5px;
+}
+
+.feature {
+  font-size: 13px;
+  color: #166534;
+  margin-top: 5px;
+}
