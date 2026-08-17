@@ -2,219 +2,500 @@
 <html lang="he" dir="rtl">
 
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta charset="utf-8">
 
-<meta name="theme-color" content="#111827">
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,viewport-fit=cover"
+  >
 
-<link rel="manifest" href="/manifest.webmanifest">
+  <meta name="theme-color" content="#111827">
 
-<title>Travel Search</title>
+  <link rel="manifest" href="/manifest.webmanifest">
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <title>Travel Search</title>
 
-<link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/style.css">
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  >
 </head>
 
 <body>
 
-<header>
-  <div class="logo">🌍 <b>Travel Search</b></div>
+  <!-- Dynamic destination background -->
+  <div id="backgroundLayer"></div>
+  <div id="backgroundOverlay"></div>
 
-  <div class="top-controls">
-    <select id="lang">
-      <option value="he">עברית</option>
-      <option value="en">English</option>
-    </select>
+  <div id="app">
 
-    <select id="currency">
-      <option value="ILS">₪ שקל</option>
-      <option value="USD">$ דולר</option>
-      <option value="THB">฿ באט</option>
-      <option value="EUR">€ אירו</option>
-      <option value="GBP">£ פאונד</option>
-      <option value="JPY">¥ ין</option>
-      <option value="CAD">CAD</option>
-      <option value="AUD">AUD</option>
-      <option value="CHF">CHF</option>
-      <option value="SGD">SGD</option>
-    </select>
+    <!-- HEADER -->
+    <header>
+
+      <div class="brand">
+        🌍 <span>Travel Search</span>
+      </div>
+
+      <div class="headerControls">
+
+        <select id="lang">
+          <option value="he">עברית</option>
+          <option value="en">English</option>
+        </select>
+
+        <select id="currency">
+          <option value="ILS">₪ שקל</option>
+          <option value="USD">$ USD</option>
+          <option value="THB">฿ THB</option>
+          <option value="EUR">€ EUR</option>
+          <option value="GBP">£ GBP</option>
+          <option value="JPY">¥ JPY</option>
+          <option value="CAD">$ CAD</option>
+          <option value="AUD">A$ AUD</option>
+          <option value="CHF">CHF</option>
+          <option value="SGD">S$ SGD</option>
+        </select>
+
+      </div>
+
+    </header>
+
+
+    <!-- HERO -->
+    <section class="hero">
+
+      <div class="heroContent">
+
+        <div class="heroBadge">
+          ✈️ 🏨
+        </div>
+
+        <h1 id="mainTitle">
+          טיסות ומלונות בכל העולם
+        </h1>
+
+        <p id="mainSubtitle">
+          מצא את הטיסה והמלון המתאימים לך במחיר הטוב ביותר
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- TABS -->
+    <div class="tabs">
+
+      <button id="fb" class="tab active">
+        ✈️ טיסות
+      </button>
+
+      <button id="hb" class="tab">
+        🏨 מלונות
+      </button>
+
+    </div>
+
+
+    <main>
+
+      <!-- ========================= -->
+      <!-- FLIGHTS -->
+      <!-- ========================= -->
+
+      <section id="flights">
+
+        <div class="searchBox">
+
+          <h2>✈️ חיפוש טיסות</h2>
+
+          <div class="grid">
+
+            <div class="field">
+
+              <label for="from">
+                מוצא
+              </label>
+
+              <input
+                id="from"
+                value="TLV"
+                placeholder="TLV"
+                autocomplete="off"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="to">
+                יעד
+              </label>
+
+              <input
+                id="to"
+                value="BKK"
+                placeholder="BKK"
+                autocomplete="off"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="dep">
+                📅 תאריך יציאה
+              </label>
+
+              <input
+                id="dep"
+                type="date"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="ret">
+                📅 תאריך חזרה
+              </label>
+
+              <input
+                id="ret"
+                type="date"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="adults">
+                👤 נוסעים
+              </label>
+
+              <input
+                id="adults"
+                type="number"
+                value="2"
+                min="1"
+                max="9"
+              >
+
+            </div>
+
+          </div>
+
+
+          <button
+            class="search"
+            id="fs"
+          >
+            🔎 חפש טיסות
+          </button>
+
+        </div>
+
+
+        <div
+          id="flightResults"
+          class="results"
+        ></div>
+
+      </section>
+
+
+      <!-- ========================= -->
+      <!-- HOTELS -->
+      <!-- ========================= -->
+
+      <section
+        id="hotels"
+        hidden
+      >
+
+        <div class="searchBox">
+
+          <h2>🏨 חיפוש מלונות</h2>
+
+          <div class="grid">
+
+            <div class="field full">
+
+              <label for="city">
+                📍 עיר / יעד
+              </label>
+
+              <input
+                id="city"
+                value="Bangkok"
+                placeholder="Bangkok"
+                autocomplete="off"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="checkin">
+                📅 תאריך כניסה
+              </label>
+
+              <input
+                id="checkin"
+                type="date"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="checkout">
+                📅 תאריך יציאה
+              </label>
+
+              <input
+                id="checkout"
+                type="date"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="guests">
+                👤 אורחים
+              </label>
+
+              <input
+                id="guests"
+                type="number"
+                value="2"
+                min="1"
+                max="20"
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="rooms">
+                🚪 חדרים
+              </label>
+
+              <input
+                id="rooms"
+                type="number"
+                value="1"
+                min="1"
+                max="10"
+              >
+
+            </div>
+
+          </div>
+
+
+          <button
+            class="search"
+            id="hs"
+          >
+            🔎 חפש מלונות
+          </button>
+
+        </div>
+
+
+        <!-- HOTEL FILTERS -->
+
+        <div
+          id="hotelFilters"
+          class="filterBox"
+          hidden
+        >
+
+          <div class="filterTitle">
+            🎛️ סינון ומיון
+          </div>
+
+
+          <div class="filterGrid">
+
+            <div class="field">
+
+              <label for="hotelSearch">
+                🔎 חיפוש מלון
+              </label>
+
+              <input
+                id="hotelSearch"
+                placeholder="שם המלון..."
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="sortHotels">
+                💰 מיון
+              </label>
+
+              <select id="sortHotels">
+
+                <option value="priceAsc">
+                  זול → יקר
+                </option>
+
+                <option value="priceDesc">
+                  יקר → זול
+                </option>
+
+                <option value="ratingDesc">
+                  דירוג גבוה
+                </option>
+
+                <option value="reviewsDesc">
+                  מספר ביקורות
+                </option>
+
+              </select>
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="minRating">
+                ⭐ דירוג מינימלי
+              </label>
+
+              <select id="minRating">
+
+                <option value="0">הכול</option>
+                <option value="4">4+</option>
+                <option value="4.5">4.5+</option>
+                <option value="4.7">4.7+</option>
+
+              </select>
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="maxPrice">
+                💰 מחיר מקסימלי
+              </label>
+
+              <input
+                id="maxPrice"
+                type="number"
+                min="0"
+                placeholder="ללא הגבלה"
+              >
+
+            </div>
+
+          </div>
+
+
+          <div class="checkFilters">
+
+            <label class="check">
+
+              <input
+                type="checkbox"
+                id="breakfastFilter"
+              >
+
+              🍳 ארוחת בוקר
+
+            </label>
+
+
+            <label class="check">
+
+              <input
+                type="checkbox"
+                id="cancelFilter"
+              >
+
+              ✓ ביטול חינם
+
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <!-- MAP -->
+
+        <section class="mapSection">
+
+          <div class="mapHeader">
+
+            <h2>
+              🗺️ מלונות על המפה
+            </h2>
+
+            <button
+              id="mapSearch"
+              class="mapSearchButton"
+            >
+              🔎 חפש באזור המפה
+            </button>
+
+          </div>
+
+
+          <div id="map"></div>
+
+        </section>
+
+
+        <!-- HOTEL RESULTS -->
+
+        <div
+          id="hotelResults"
+          class="results"
+        ></div>
+
+      </section>
+
+    </main>
+
+
+    <!-- LOADING -->
+    <div
+      id="loading"
+      class="loading"
+      hidden
+    >
+      <div class="spinner"></div>
+      <div id="loadingText">
+        מחפש...
+      </div>
+    </div>
+
   </div>
-</header>
-
-<main>
-
-<h1 id="mainTitle">✈️ טיסות ומלונות בכל העולם</h1>
-
-<div class="tabs">
-  <button id="fb">✈️ טיסות</button>
-  <button id="hb">🏨 מלונות</button>
-</div>
-
-<!-- ================= FLIGHTS ================= -->
-
-<section id="flights">
-
-<h2>✈️ חיפוש טיסות</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>מוצא</label>
-<input id="from" value="TLV" placeholder="לדוגמה TLV">
-</div>
-
-<div class="field">
-<label>יעד</label>
-<input id="to" value="BKK" placeholder="לדוגמה BKK">
-</div>
-
-<div class="field">
-<label>📅 תאריך יציאה</label>
-<input id="dep" type="date">
-</div>
-
-<div class="field">
-<label>📅 תאריך חזרה</label>
-<input id="ret" type="date">
-</div>
-
-<div class="field">
-<label>👥 נוסעים</label>
-<input id="adults" type="number" value="2" min="1">
-</div>
-
-</div>
-
-<button class="search" id="fs">
-🔎 חפש טיסות
-</button>
-
-<div class="filters">
-
-<div class="field">
-<label>✈️ חברת תעופה</label>
-<select id="airlineFilter">
-<option value="all">כל חברות התעופה</option>
-</select>
-</div>
-
-<div class="field">
-<label>🔄 עצירות</label>
-<select id="stopsFilter">
-<option value="all">הכול</option>
-<option value="0">ללא עצירות</option>
-<option value="1">עצירה אחת</option>
-<option value="2">2+ עצירות</option>
-</select>
-</div>
-
-<div class="field">
-<label>💰 מיון</label>
-<select id="flightSort">
-<option value="priceAsc">הזול ביותר</option>
-<option value="priceDesc">היקר ביותר</option>
-<option value="duration">זמן טיסה</option>
-</select>
-</div>
-
-</div>
-
-<div id="flightResults"></div>
-
-</section>
 
 
-<!-- ================= HOTELS ================= -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  ></script>
 
-<section id="hotels" hidden>
-
-<h2>🏨 חיפוש מלונות</h2>
-
-<div class="grid">
-
-<div class="field">
-<label>📍 עיר / יעד</label>
-<input id="city" value="Bangkok" placeholder="Bangkok">
-</div>
-
-<div class="field">
-<label>📅 תאריך כניסה</label>
-<input id="checkin" type="date">
-</div>
-
-<div class="field">
-<label>📅 תאריך יציאה</label>
-<input id="checkout" type="date">
-</div>
-
-<div class="field">
-<label>👥 אורחים</label>
-<input id="guests" type="number" value="2" min="1">
-</div>
-
-<div class="field">
-<label>🛏️ חדרים</label>
-<input id="rooms" type="number" value="1" min="1">
-</div>
-
-</div>
-
-<button class="search" id="hs">
-🔎 חפש מלונות
-</button>
-
-<div class="filters">
-
-<div class="field">
-<label>⭐ דירוג מינימום</label>
-<select id="ratingFilter">
-<option value="0">כל הדירוגים</option>
-<option value="4">4+ ⭐</option>
-<option value="4.5">4.5+ ⭐</option>
-</select>
-</div>
-
-<div class="field">
-<label>💰 מיון מחיר</label>
-<select id="hotelSort">
-<option value="priceAsc">הזול ביותר</option>
-<option value="priceDesc">היקר ביותר</option>
-<option value="rating">הדירוג הגבוה ביותר</option>
-<option value="reviews">הכי הרבה ביקורות</option>
-</select>
-</div>
-
-<div class="field checkbox">
-<label>
-<input type="checkbox" id="breakfastFilter">
- 🍳 ארוחת בוקר
-</label>
-</div>
-
-<div class="field checkbox">
-<label>
-<input type="checkbox" id="cancelFilter">
- ❌ ביטול חינם
-</label>
-</div>
-
-</div>
-
-<div id="hotelResults"></div>
-
-<h2>📍 מלונות על המפה</h2>
-
-<div id="map"></div>
-
-</section>
-
-</main>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="/app.js"></script>
+  <script src="/app.js"></script>
 
 </body>
 </html>
