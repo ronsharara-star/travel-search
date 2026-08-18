@@ -2,1131 +2,417 @@
   box-sizing: border-box;
 }
 
-
-html {
-  scroll-behavior: smooth;
-}
-
-
+html,
 body {
   margin: 0;
-
-  background: #eef1f5;
-
+  min-height: 100%;
+  font-family: system-ui, Arial, sans-serif;
   color: #111827;
-
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Arial,
-    sans-serif;
-
-  min-height: 100vh;
 }
 
-
-/* =========================
-   BACKGROUND
-========================= */
+body {
+  background: #eef2f7;
+}
 
 #backgroundLayer {
-
   position: fixed;
-
   inset: 0;
-
   z-index: -3;
-
-  background:
-    linear-gradient(
-      135deg,
-      #dbeafe,
-      #f8fafc
-    );
-
   background-size: cover;
-
   background-position: center;
-
-  transition:
-    opacity 0.7s ease,
-    background-image 0.7s ease;
-
-  opacity: 1;
+  background-repeat: no-repeat;
+  transition: background-image 1s ease;
 }
-
 
 #backgroundOverlay {
-
   position: fixed;
-
   inset: 0;
-
   z-index: -2;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(255,255,255,0.76),
-      rgba(244,246,248,0.94)
-    );
+  background: rgba(255,255,255,.78);
+  backdrop-filter: blur(2px);
 }
-
-
-/* =========================
-   APP
-========================= */
 
 #app {
-
   min-height: 100vh;
-
-  position: relative;
 }
-
-
-/* =========================
-   HEADER
-========================= */
 
 header {
-
   position: sticky;
-
   top: 0;
-
   z-index: 1000;
 
-  background:
-    rgba(15,23,42,0.96);
-
-  color: white;
-
-  padding:
-    12px 16px;
-
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
 
-  gap: 12px;
+  padding: 12px 16px;
 
-  backdrop-filter: blur(12px);
+  background: rgba(17,24,39,.96);
+  color: white;
 }
-
 
 .brand {
-
-  font-size: 20px;
-
+  font-size: 18px;
   font-weight: 900;
-
-  white-space: nowrap;
 }
-
 
 .headerControls {
-
   display: flex;
-
-  gap: 7px;
+  gap: 6px;
 }
 
-
 header select {
+  padding: 7px;
+  border: 0;
+  border-radius: 9px;
+}
 
-  padding:
-    8px 10px;
+.hero {
+  padding: 35px 18px 25px;
+  text-align: center;
+}
 
-  border:
-    1px solid #d1d5db;
+.heroContent {
+  max-width: 700px;
+  margin: auto;
+}
 
-  border-radius: 10px;
+.heroBadge {
+  font-size: 42px;
+}
+
+h1 {
+  margin: 8px 0;
+  font-size: 30px;
+}
+
+.hero p {
+  margin: 0;
+  color: #475569;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+
+  max-width: 900px;
+  margin: 0 auto;
+
+  padding: 8px;
 
   background: white;
+  border-radius: 16px 16px 0 0;
+}
 
-  color: #111827;
+.tab {
+  flex: 1;
 
+  padding: 14px;
+
+  border: 0;
+  border-radius: 12px;
+
+  background: #e5e7eb;
+
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.tab.active {
+  background: #111827;
+  color: white;
+}
+
+main {
+  max-width: 900px;
+  margin: auto;
+}
+
+.searchBox,
+.filterBox,
+.mapSection {
+  background: rgba(255,255,255,.95);
+  margin: 12px 14px;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 3px 14px rgba(0,0,0,.08);
+}
+
+.searchBox h2,
+.mapHeader h2 {
+  margin-top: 0;
+}
+
+.grid,
+.filterGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field.full {
+  grid-column: 1 / -1;
+}
+
+.field label {
+  font-weight: 700;
   font-size: 14px;
 }
 
+.field input,
+.field select {
+  width: 100%;
 
-/* =========================
-   HERO
-========================= */
+  padding: 13px;
 
-.hero {
+  border: 1px solid #d1d5db;
+  border-radius: 11px;
 
-  min-height: 230px;
+  background: white;
 
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  text-align: center;
-
-  padding: 35px 20px;
+  font-size: 16px;
 }
 
-
-.heroContent {
-
-  max-width: 760px;
-
-  background:
-    rgba(255,255,255,0.78);
-
-  border-radius: 25px;
-
-  padding:
-    25px 20px;
-
-  box-shadow:
-    0 10px 40px
-    rgba(15,23,42,0.10);
-
-  backdrop-filter: blur(8px);
-}
-
-
-.heroBadge {
-
-  font-size: 34px;
-
-  margin-bottom: 8px;
-}
-
-
-h1 {
-
-  margin: 0;
-
-  font-size: clamp(
-    32px,
-    7vw,
-    58px
-  );
-
-  line-height: 1.05;
-
-  font-weight: 950;
-}
-
-
-.hero p {
-
-  margin:
-    14px 0 0;
-
-  color: #475569;
-
-  font-size: 17px;
-}
-
-
-/* =========================
-   TABS
-========================= */
-
-.tabs {
-
-  display: flex;
-
-  gap: 10px;
-
-  padding:
-    10px 14px;
-
-  max-width: 900px;
-
-  margin:
-    0 auto;
-}
-
-
-.tab {
-
-  flex: 1;
+.search {
+  width: 100%;
+  margin-top: 14px;
 
   padding: 15px;
 
   border: 0;
-
-  border-radius: 15px;
-
-  background:
-    rgba(255,255,255,0.90);
-
-  color: #111827;
-
-  font-size: 17px;
-
-  font-weight: 900;
-
-  box-shadow:
-    0 3px 12px
-    rgba(0,0,0,0.07);
-
-  cursor: pointer;
-
-  transition:
-    0.2s;
-}
-
-
-.tab.active {
-
-  background: #111827;
-
-  color: white;
-
-  transform:
-    translateY(-1px);
-}
-
-
-/* =========================
-   MAIN
-========================= */
-
-main {
-
-  width: 100%;
-
-  max-width: 1000px;
-
-  margin: 0 auto;
-
-  padding:
-    0 0 50px;
-}
-
-
-/* =========================
-   SEARCH BOX
-========================= */
-
-.searchBox {
-
-  background:
-    rgba(255,255,255,0.94);
-
-  margin:
-    10px 14px;
-
-  padding:
-    18px;
-
-  border-radius: 20px;
-
-  box-shadow:
-    0 5px 20px
-    rgba(15,23,42,0.08);
-
-  backdrop-filter: blur(8px);
-}
-
-
-.searchBox h2 {
-
-  margin:
-    0 0 16px;
-
-  font-size: 22px;
-}
-
-
-/* =========================
-   GRID
-========================= */
-
-.grid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, minmax(0, 1fr));
-
-  gap: 12px;
-}
-
-
-.field {
-
-  display: flex;
-
-  flex-direction: column;
-
-  gap: 6px;
-}
-
-
-.field.full {
-
-  grid-column:
-    1 / -1;
-}
-
-
-.field label {
-
-  font-size: 14px;
-
-  font-weight: 800;
-
-  color: #334155;
-}
-
-
-.field input,
-.field select {
-
-  width: 100%;
-
-  min-height: 50px;
-
-  padding:
-    12px 13px;
-
-  border:
-    1px solid #d1d5db;
-
   border-radius: 13px;
 
-  background: white;
-
-  color: #111827;
-
-  font-size: 16px;
-
-  outline: none;
-}
-
-
-.field input:focus,
-.field select:focus {
-
-  border-color:
-    #2563eb;
-
-  box-shadow:
-    0 0 0 3px
-    rgba(37,99,235,0.12);
-}
-
-
-/* =========================
-   SEARCH BUTTON
-========================= */
-
-.search {
-
-  margin-top: 16px;
-
-  width: 100%;
-
-  min-height: 54px;
-
-  border: 0;
-
-  border-radius: 15px;
-
-  background:
-    #111827;
-
+  background: #111827;
   color: white;
 
-  font-size: 18px;
-
+  font-size: 17px;
   font-weight: 900;
-
-  cursor: pointer;
-
-  box-shadow:
-    0 7px 15px
-    rgba(15,23,42,0.20);
-
-  transition:
-    0.2s;
 }
 
-
-.search:active {
-
-  transform:
-    scale(0.98);
+.search:disabled {
+  opacity: .7;
 }
-
-
-/* =========================
-   FILTERS
-========================= */
-
-.filterBox {
-
-  background:
-    rgba(255,255,255,0.95);
-
-  margin:
-    12px 14px;
-
-  padding:
-    16px;
-
-  border-radius: 18px;
-
-  box-shadow:
-    0 4px 16px
-    rgba(0,0,0,0.07);
-}
-
 
 .filterTitle {
-
-  font-size: 19px;
-
+  font-size: 18px;
   font-weight: 900;
-
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
-
-.filterGrid {
-
-  display: grid;
-
-  grid-template-columns:
-    repeat(2, 1fr);
-
-  gap: 12px;
-}
-
-
-.checkFilters {
-
-  display: flex;
-
-  flex-wrap: wrap;
-
-  gap: 15px;
-
+.filterActions {
   margin-top: 14px;
 }
 
+.secondaryButton {
+  padding: 10px 14px;
+
+  border: 0;
+  border-radius: 10px;
+
+  background: #e5e7eb;
+  font-weight: 800;
+}
+
+.checkFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+
+  margin-top: 15px;
+}
 
 .check {
-
   display: flex;
-
   align-items: center;
-
   gap: 7px;
-
-  font-weight: 800;
-
-  cursor: pointer;
+  font-weight: 700;
 }
 
-
-.check input {
-
-  width: 18px;
-
-  height: 18px;
+.resultCount {
+  margin: 12px 16px;
+  color: #475569;
+  font-weight: 700;
 }
-
-
-/* =========================
-   CARDS
-========================= */
-
-.results {
-
-  padding-bottom: 10px;
-}
-
 
 .card {
+  background: white;
 
-  background:
-    rgba(255,255,255,0.96);
+  border-radius: 16px;
 
-  border-radius: 18px;
+  padding: 16px;
 
-  padding: 17px;
+  margin: 10px 14px;
 
-  margin:
-    10px 14px;
-
-  box-shadow:
-    0 5px 18px
-    rgba(15,23,42,0.08);
-
-  transition:
-    transform 0.2s,
-    box-shadow 0.2s;
+  box-shadow: 0 3px 12px rgba(0,0,0,.08);
 }
-
-
-.card:active {
-
-  transform:
-    scale(0.99);
-}
-
 
 .row {
-
   display: flex;
-
-  justify-content:
-    space-between;
-
-  align-items:
-    flex-start;
-
+  justify-content: space-between;
   gap: 15px;
 }
 
-
-.airline {
-
-  font-size: 18px;
-
-  font-weight: 900;
-}
-
-
-.route {
-
-  font-size: 17px;
-
-  font-weight: 800;
-
-  margin-top: 6px;
-}
-
-
-.time {
-
-  color: #475569;
-
-  margin-top: 5px;
-}
-
-
 .price {
-
-  font-size: 22px;
-
-  font-weight: 950;
-
+  font-size: 21px;
+  font-weight: 900;
   white-space: nowrap;
 }
 
-
 .muted {
-
   color: #64748b;
-
   font-size: 13px;
+  margin-top: 4px;
 }
 
-
-.flightBottom {
-
-  margin-top: 12px;
-
-  padding-top: 10px;
-
-  border-top:
-    1px solid #e5e7eb;
-
-  color: #475569;
-
-  font-size: 14px;
-
-  font-weight: 700;
-}
-
-
-/* =========================
-   HOTEL CARD
-========================= */
-
-.hotelTop {
-
+.flightDetails {
+  margin-top: 10px;
   display: flex;
-
-  justify-content:
-    space-between;
-
-  gap: 15px;
-}
-
-
-.hotelName {
-
-  font-size: 19px;
-
-  font-weight: 950;
-}
-
-
-.rating {
-
-  font-size: 16px;
-
-  margin-top: 5px;
-}
-
-
-.hotelPrice {
-
-  text-align: left;
-
-  min-width: 100px;
-}
-
-
-.totalPrice {
-
-  margin-top: 8px;
-
-  font-size: 16px;
-
-  font-weight: 900;
-}
-
-
-.hotelFeatures {
-
-  display: flex;
-
   flex-wrap: wrap;
-
-  gap: 7px;
-
-  margin-top: 14px;
+  gap: 8px;
 }
 
+.badge {
+  display: inline-block;
 
-.hotelFeatures span {
+  padding: 5px 9px;
 
-  background:
-    #f1f5f9;
+  border-radius: 999px;
 
-  padding:
-    7px 10px;
+  background: #eef2ff;
 
-  border-radius: 10px;
-
-  font-size: 13px;
-
-  font-weight: 700;
+  font-size: 12px;
+  font-weight: 800;
 }
-
-
-/* =========================
-   MAP
-========================= */
 
 .mapSection {
-
-  margin:
-    15px 14px;
+  padding: 0;
+  overflow: hidden;
 }
-
 
 .mapHeader {
+  padding: 15px;
 
   display: flex;
-
+  justify-content: space-between;
   align-items: center;
-
-  justify-content:
-    space-between;
-
   gap: 10px;
-
-  margin-bottom: 10px;
 }
-
 
 .mapHeader h2 {
-
   margin: 0;
-
-  font-size: 23px;
 }
-
 
 .mapSearchButton {
-
   border: 0;
+  border-radius: 10px;
 
-  background:
-    #2563eb;
+  padding: 10px 12px;
 
+  background: #111827;
   color: white;
 
-  border-radius: 11px;
-
-  padding:
-    9px 12px;
-
   font-weight: 800;
-
-  cursor: pointer;
 }
-
 
 #map {
-
+  height: 430px;
   width: 100%;
-
-  height: 420px;
-
-  border-radius: 20px;
-
-  overflow: hidden;
-
-  box-shadow:
-    0 5px 20px
-    rgba(15,23,42,0.15);
-
-  border:
-    3px solid white;
 }
 
-
-.mapPopup {
-
-  min-width: 170px;
-
-  font-size: 14px;
-
-  line-height: 1.7;
+.loading[hidden] {
+  display: none !important;
 }
-
-
-.mapSearchInfo {
-
-  margin:
-    10px 14px;
-
-  padding:
-    12px;
-
-  border-radius: 12px;
-
-  background:
-    #dbeafe;
-
-  color:
-    #1e3a8a;
-
-  font-weight: 800;
-}
-
-
-/* =========================
-   EMPTY / ERROR
-========================= */
-
-.emptyCard,
-.errorCard {
-
-  background:
-    rgba(255,255,255,0.95);
-
-  border-radius: 17px;
-
-  padding:
-    25px;
-
-  margin:
-    15px 14px;
-
-  text-align: center;
-
-  font-weight: 800;
-}
-
-
-.errorCard {
-
-  color:
-    #b91c1c;
-
-  background:
-    #fee2e2;
-}
-
-
-/* =========================
-   LOADING
-========================= */
 
 .loading {
-
   position: fixed;
-
   inset: 0;
 
-  z-index: 3000;
-
-  background:
-    rgba(15,23,42,0.55);
+  z-index: 99999;
 
   display: flex;
 
   flex-direction: column;
 
+  justify-content: center;
   align-items: center;
 
-  justify-content: center;
+  gap: 15px;
+
+  background: rgba(0,0,0,.42);
+
+  backdrop-filter: blur(4px);
 
   color: white;
 
+  font-size: 20px;
   font-weight: 900;
-
-  font-size: 18px;
-
-  backdrop-filter:
-    blur(5px);
 }
 
-
 .spinner {
+  width: 45px;
+  height: 45px;
 
-  width: 48px;
-
-  height: 48px;
-
-  border:
-    5px solid
-    rgba(255,255,255,0.35);
-
-  border-top-color:
-    white;
+  border: 5px solid rgba(255,255,255,.4);
+  border-top-color: white;
 
   border-radius: 50%;
 
-  animation:
-    spin 0.8s linear infinite;
-
-  margin-bottom: 15px;
+  animation: spin .8s linear infinite;
 }
-
 
 @keyframes spin {
-
   to {
-    transform:
-      rotate(360deg);
+    transform: rotate(360deg);
   }
-
 }
 
-
-/* =========================
-   MOBILE
-========================= */
+.leaflet-popup-content {
+  font-size: 14px;
+}
 
 @media (max-width: 600px) {
 
   header {
-
-    align-items:
-      flex-start;
-
+    align-items: flex-start;
   }
-
-
-  .brand {
-
-    font-size: 18px;
-  }
-
 
   .headerControls {
-
-    flex-direction:
-      column;
-
+    flex-direction: column;
   }
 
-
-  header select {
-
-    min-width: 105px;
-
-  }
-
-
-  .hero {
-
-    min-height: 200px;
-
-  }
-
-
-  .heroContent {
-
-    padding:
-      20px 15px;
-
-  }
-
-
-  h1 {
-
-    font-size: 36px;
-
-  }
-
-
-  .hero p {
-
-    font-size: 15px;
-
-  }
-
-
-  .grid {
-
-    grid-template-columns:
-      1fr;
-
-  }
-
-
+  .grid,
   .filterGrid {
-
-    grid-template-columns:
-      1fr;
-
+    grid-template-columns: 1fr;
   }
-
 
   .field.full {
-
-    grid-column:
-      auto;
-
+    grid-column: auto;
   }
 
-
-  .hotelTop {
-
-    flex-direction:
-      column;
-
+  .hero {
+    padding-top: 25px;
   }
-
-
-  .hotelPrice {
-
-    text-align:
-      right;
-
-  }
-
-
-  .mapHeader {
-
-    align-items:
-      flex-start;
-
-    flex-direction:
-      column;
-
-  }
-
-
-  .mapSearchButton {
-
-    width: 100%;
-
-  }
-
-
-  #map {
-
-    height: 390px;
-
-  }
-
-}
-
-
-/* =========================
-   SMALL PHONES
-========================= */
-
-@media (max-width: 380px) {
-
-  .brand {
-
-    font-size: 16px;
-
-  }
-
-
-  header select {
-
-    min-width: 90px;
-
-    font-size: 12px;
-
-  }
-
 
   h1 {
-
-    font-size: 31px;
-
+    font-size: 25px;
   }
 
-
-  .tabs {
-
-    padding:
-      8px;
-
+  .row {
+    align-items: flex-start;
   }
 
-
-  .tab {
-
-    font-size: 15px;
-
+  .mapHeader {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-
-  .searchBox {
-
-    margin:
-      8px;
-
+  #map {
+    height: 390px;
   }
-
-
-  .card {
-
-    margin:
-      8px;
-
-  }
-
-}
-.loading[hidden] {
-    display: none !important;
 }
