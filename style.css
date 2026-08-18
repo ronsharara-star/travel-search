@@ -1127,3 +1127,6 @@ main {
   }
 
 }
+.loading[hidden] {
+    display: none !important;
+}
