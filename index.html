@@ -200,7 +200,77 @@
           </button>
 
         </div>
+<!-- FLIGHT FILTERS -->
+<div id="flightFilters" class="filterBox" hidden>
 
+  <div class="filterTitle">
+    🎛️ סינון ומיון טיסות
+  </div>
+
+  <div class="filterGrid">
+
+    <div class="field">
+      <label for="airlineFilter">
+        ✈️ חברת תעופה
+      </label>
+
+      <select id="airlineFilter">
+        <option value="all">כל חברות התעופה</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="sortFlights">
+        💰 מיון לפי מחיר
+      </label>
+
+      <select id="sortFlights">
+        <option value="priceAsc">זול → יקר</option>
+        <option value="priceDesc">יקר → זול</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="stopsFilter">
+        🛫 עצירות
+      </label>
+
+      <select id="stopsFilter">
+        <option value="all">כל האפשרויות</option>
+        <option value="0">טיסה ישירה</option>
+        <option value="1">עצירה אחת</option>
+        <option value="2">2+ עצירות</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="maxFlightPrice">
+        💵 מחיר מקסימלי
+      </label>
+
+      <input
+        id="maxFlightPrice"
+        type="number"
+        min="0"
+        placeholder="ללא הגבלה"
+      >
+    </div>
+
+  </div>
+
+  <div class="filterActions">
+
+    <button
+      type="button"
+      id="clearFlightFilters"
+      class="secondaryButton"
+    >
+      🧹 נקה סינון
+    </button>
+
+  </div>
+
+</div>
 
         <div
           id="flightResults"
