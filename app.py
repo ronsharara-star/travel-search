@@ -7,7 +7,7 @@ from fastapi.templating import Jinja2Templates
 
 from dotenv import load_dotenv
 
-from services.search import (
+from search import (
     flights_search,
     hotels_search
 )
