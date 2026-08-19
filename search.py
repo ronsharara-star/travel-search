@@ -1,492 +1,377 @@
 import os
 import requests
-
 from dotenv import load_dotenv
-
 
 load_dotenv()
 
+AMADEUS_CLIENT_ID = os.getenv("AMADEUS_CLIENT_ID")
+AMADEUS_CLIENT_SECRET = os.getenv("AMADEUS_CLIENT_SECRET")
 
-BASE = "https://test.api.amadeus.com"
+AMADEUS_BASE_URL = "https://test.api.amadeus.com"
 
 
 def token():
+    """
+    Get Amadeus OAuth access token.
+    """
 
-    client_id = os.getenv(
-        "AMADEUS_CLIENT_ID"
-    )
-
-    client_secret = os.getenv(
-        "AMADEUS_CLIENT_SECRET"
-    )
-
-
-    if not client_id or not client_secret:
-
+    if not AMADEUS_CLIENT_ID or not AMADEUS_CLIENT_SECRET:
         raise RuntimeError(
-            "Missing Amadeus credentials"
+            "AMADEUS_CLIENT_ID or AMADEUS_CLIENT_SECRET is missing"
         )
 
-
     response = requests.post(
-
-        BASE +
-        "/v1/security/oauth2/token",
-
+        f"{AMADEUS_BASE_URL}/v1/security/oauth2/token",
         data={
-
-            "grant_type":
-                "client_credentials",
-
-            "client_id":
-                client_id,
-
-            "client_secret":
-                client_secret
-
+            "grant_type": "client_credentials",
+            "client_id": AMADEUS_CLIENT_ID,
+            "client_secret": AMADEUS_CLIENT_SECRET,
         },
-
-        timeout=20
-
+        timeout=30,
     )
-
 
     response.raise_for_status()
 
+    data = response.json()
 
-    return response.json()["access_token"]
+    return data["access_token"]
 
 
 def flights_search(
     origin,
     destination,
     departure,
-    return_date,
-    adults
+    return_date=None,
+    adults=1,
 ):
+    """
+    Search flights using Amadeus Flight Offers Search API.
+    """
 
     access_token = token()
 
-
     params = {
-
-        "originLocationCode":
-            origin.upper(),
-
-        "destinationLocationCode":
-            destination.upper(),
-
-        "departureDate":
-            departure,
-
-        "adults":
-            adults,
-
-        "currencyCode":
-            "USD",
-
-        "max":
-            50
-
+        "originLocationCode": origin.upper(),
+        "destinationLocationCode": destination.upper(),
+        "departureDate": departure,
+        "adults": int(adults),
+        "currencyCode": "USD",
+        "max": 20,
     }
 
-
     if return_date:
-
         params["returnDate"] = return_date
 
-
     response = requests.get(
-
-        BASE +
-        "/v2/shopping/flight-offers",
-
+        f"{AMADEUS_BASE_URL}/v2/shopping/flight-offers",
         headers={
-
-            "Authorization":
-                "Bearer " +
-                access_token
-
+            "Authorization": f"Bearer {access_token}"
         },
-
         params=params,
-
-        timeout=30
-
+        timeout=40,
     )
-
 
     response.raise_for_status()
 
-
-    data =
-        response.json().get(
-            "data",
-            []
-        )
-
+    data = response.json()
 
     results = []
 
+    for offer in data.get("data", []):
 
-    for offer in data:
+        price = (
+            offer.get("price", {})
+            .get("grandTotal", 0)
+        )
 
-        itineraries =
-            offer.get(
-                "itineraries",
-                []
-            )
-
+        itineraries = offer.get("itineraries", [])
 
         if not itineraries:
-
             continue
 
+        first_itinerary = itineraries[0]
 
-        first_itinerary =
-            itineraries[0]
-
-
-        segments =
-            first_itinerary.get(
-                "segments",
-                []
-            )
-
-
-        if not segments:
-
-            continue
-
-
-        first =
-            segments[0]
-
-        last =
-            segments[-1]
-
-
-        stops =
-            sum(
-                max(
-                    0,
-                    len(
-                        item.get(
-                            "segments",
-                            []
-                        )
-                    ) - 1
-                )
-                for item in itineraries
-            )
-
-
-        airline_codes =
-            offer.get(
-                "validatingAirlineCodes",
-                ["?"]
-            )
-
-
-        price =
-            float(
-                offer
-                ["price"]
-                ["grandTotal"]
-            )
-
-
-        results.append({
-
-            "airline":
-                airline_codes[0],
-
-            "origin":
-                first["departure"]
-                ["iataCode"],
-
-            "destination":
-                last["arrival"]
-                ["iataCode"],
-
-            "departure":
-                first["departure"]
-                .get("at", ""),
-
-            "arrival":
-                last["arrival"]
-                .get("at", ""),
-
-            "stops":
-                stops,
-
-            "price":
-                price
-
-        })
-
-
-    return results
-
-
-def city_code(city):
-
-    access_token = token()
-
-
-    response = requests.get(
-
-        BASE +
-        "/v1/reference-data/locations",
-
-        headers={
-
-            "Authorization":
-                "Bearer " +
-                access_token
-
-        },
-
-        params={
-
-            "subType":
-                "CITY",
-
-            "keyword":
-                city,
-
-            "page[limit]":
-                5
-
-        },
-
-        timeout=20
-
-    )
-
-
-    response.raise_for_status()
-
-
-    data =
-        response.json().get(
-            "data",
+        segments = first_itinerary.get(
+            "segments",
             []
         )
 
+        if not segments:
+            continue
 
-    if not data:
+        first_segment = segments[0]
+        last_segment = segments[-1]
 
-        raise RuntimeError(
-            "City not found"
+        departure_info = first_segment.get(
+            "departure",
+            {}
         )
 
+        arrival_info = last_segment.get(
+            "arrival",
+            {}
+        )
 
-    return data[0]["iataCode"]
+        carrier_codes = offer.get(
+            "validatingAirlineCodes",
+            []
+        )
+
+        airline = (
+            carrier_codes[0]
+            if carrier_codes
+            else "Airline"
+        )
+
+        stops = max(
+            len(segments) - 1,
+            0
+        )
+
+        results.append(
+            {
+                "airline": airline,
+
+                "origin": departure_info.get(
+                    "iataCode",
+                    origin.upper()
+                ),
+
+                "destination": arrival_info.get(
+                    "iataCode",
+                    destination.upper()
+                ),
+
+                "departure": departure_info.get(
+                    "at",
+                    ""
+                ),
+
+                "arrival": arrival_info.get(
+                    "at",
+                    ""
+                ),
+
+                "price": float(price),
+
+                "stops": stops,
+            }
+        )
+
+    return results
 
 
 def hotels_search(
     city,
     checkin,
     checkout,
-    guests,
-    rooms
+    guests=2,
+    rooms=1,
 ):
+    """
+    Search hotels using Amadeus.
+    """
 
     access_token = token()
 
+    # ---------------------------------
+    # 1. Find city information
+    # ---------------------------------
 
-    code =
-        city_code(city)
+    city_params = {
+        "keyword": city,
+        "subType": "CITY",
+    }
 
-
-    response = requests.get(
-
-        BASE +
-        "/v1/reference-data/locations/hotels/by-city",
-
+    city_response = requests.get(
+        f"{AMADEUS_BASE_URL}/v1/reference-data/locations",
         headers={
-
-            "Authorization":
-                "Bearer " +
-                access_token
-
+            "Authorization": f"Bearer {access_token}"
         },
-
-        params={
-
-            "cityCode":
-                code,
-
-            "radius":
-                30,
-
-            "radiusUnit":
-                "KM",
-
-            "hotelSource":
-                "ALL"
-
-        },
-
-        timeout=30
-
+        params=city_params,
+        timeout=30,
     )
 
+    city_response.raise_for_status()
 
-    response.raise_for_status()
+    city_data = city_response.json()
 
+    locations = city_data.get(
+        "data",
+        []
+    )
 
-    hotels =
-        response.json().get(
-            "data",
-            []
-        )
-
-
-    hotel_ids =
-        ",".join(
-
-            item["hotelId"]
-
-            for item in hotels[:40]
-
-            if item.get("hotelId")
-
-        )
-
-
-    if not hotel_ids:
-
+    if not locations:
         return []
 
+    location = locations[0]
 
-    response = requests.get(
-
-        BASE +
-        "/v3/shopping/hotel-offers",
-
-        headers={
-
-            "Authorization":
-                "Bearer " +
-                access_token
-
-        },
-
-        params={
-
-            "hotelIds":
-                hotel_ids,
-
-            "checkInDate":
-                checkin,
-
-            "checkOutDate":
-                checkout,
-
-            "adults":
-                guests,
-
-            "roomQuantity":
-                rooms,
-
-            "currency":
-                "USD"
-
-        },
-
-        timeout=40
-
+    iata_code = location.get(
+        "iataCode"
     )
 
+    if not iata_code:
+        return []
 
-    response.raise_for_status()
+    # ---------------------------------
+    # 2. Find hotels
+    # ---------------------------------
 
+    hotel_params = {
+        "cityCode": iata_code,
+        "radius": 20,
+        "radiusUnit": "KM",
+        "hotelSource": "ALL",
+    }
 
-    data =
-        response.json().get(
-            "data",
-            []
+    hotel_response = requests.get(
+        f"{AMADEUS_BASE_URL}/v1/reference-data/locations/hotels/by-city",
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        },
+        params=hotel_params,
+        timeout=40,
+    )
+
+    hotel_response.raise_for_status()
+
+    hotel_data = hotel_response.json()
+
+    hotels = hotel_data.get(
+        "data",
+        []
+    )
+
+    if not hotels:
+        return []
+
+    # ---------------------------------
+    # 3. Get hotel offers
+    # ---------------------------------
+
+    hotel_ids = []
+
+    for hotel in hotels[:20]:
+
+        hotel_id = hotel.get(
+            "hotelId"
         )
 
+        if hotel_id:
+            hotel_ids.append(
+                hotel_id
+            )
+
+    if not hotel_ids:
+        return []
+
+    offers_params = {
+        "hotelIds": ",".join(hotel_ids),
+        "checkInDate": checkin,
+        "checkOutDate": checkout,
+        "adults": int(guests),
+        "roomQuantity": int(rooms),
+        "currency": "USD",
+        "bestRateOnly": "true",
+        "view": "FULL",
+    }
+
+    offers_response = requests.get(
+        f"{AMADEUS_BASE_URL}/v3/shopping/hotel-offers",
+        headers={
+            "Authorization": f"Bearer {access_token}"
+        },
+        params=offers_params,
+        timeout=60,
+    )
+
+    if not offers_response.ok:
+        return []
+
+    offers_data = offers_response.json()
 
     results = []
 
+    for hotel in offers_data.get(
+        "data",
+        []
+    ):
 
-    for item in data:
+        hotel_info = hotel.get(
+            "hotel",
+            {}
+        )
 
-        hotel =
-            item.get(
-                "hotel",
-                {}
-            )
-
-
-        offers =
-            item.get(
-                "offers",
-                []
-            )
-
+        offers = hotel.get(
+            "offers",
+            []
+        )
 
         if not offers:
-
             continue
 
+        offer = offers[0]
 
-        try:
+        price_info = offer.get(
+            "price",
+            {}
+        )
 
-            price =
-                float(
-                    offers[0]
-                    ["price"]
-                    ["total"]
-                )
+        price = price_info.get(
+            "total",
+            0
+        )
 
-        except Exception:
+        geo = hotel_info.get(
+            "latitude"
+        )
 
-            continue
+        lon = hotel_info.get(
+            "longitude"
+        )
 
+        rating = hotel_info.get(
+            "rating",
+            0
+        )
 
-        results.append({
+        address = hotel_info.get(
+            "address",
+            {}
+        )
 
-            "name":
-                hotel.get(
+        results.append(
+            {
+                "name": hotel_info.get(
                     "name",
                     "Hotel"
                 ),
 
-            "rating":
-                float(
-                    hotel.get(
-                        "rating"
-                    ) or 0
-                ),
+                "rating": rating,
 
-            "reviews":
-                0,
+                "reviews": 0,
 
-            "price":
-                price,
+                "price": float(price or 0),
 
-            "breakfast":
-                False,
-
-            "free_cancel":
-                False,
-
-            "lat":
-                hotel.get(
+                "lat": hotel_info.get(
                     "latitude"
                 ),
 
-            "lon":
-                hotel.get(
+                "lon": hotel_info.get(
                     "longitude"
-                )
+                ),
 
-        })
+                "address": address,
 
+                "currency": price_info.get(
+                    "currency",
+                    "USD"
+                ),
+
+                "checkin": checkin,
+
+                "checkout": checkout,
+            }
+        )
 
     return results
