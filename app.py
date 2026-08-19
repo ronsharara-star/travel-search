@@ -1,9 +1,8 @@
 import os
 
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from dotenv import load_dotenv
 
@@ -11,7 +10,6 @@ from search import (
     flights_search,
     hotels_search
 )
-
 
 load_dotenv()
 
@@ -21,33 +19,60 @@ app = FastAPI(
 )
 
 
-app.mount(
-    "/static",
-    StaticFiles(directory="static"),
-    name="static"
+# =========================
+# CORS
+# =========================
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
-templates = Jinja2Templates(
-    directory="templates"
-)
+# =========================
+# HOME
+# =========================
 
+@app.get("/", response_class=HTMLResponse)
+async def home():
 
-@app.get(
-    "/",
-    response_class=HTMLResponse
-)
-async def home(
-    request: Request
-):
-
-    return templates.TemplateResponse(
-        "index.html",
-        {
-            "request": request
-        }
+    return FileResponse(
+        "index.html"
     )
 
+
+# =========================
+# CSS
+# =========================
+
+@app.get("/style.css")
+async def style():
+
+    return FileResponse(
+        "style.css",
+        media_type="text/css"
+    )
+
+
+# =========================
+# JAVASCRIPT
+# =========================
+
+@app.get("/app.js")
+async def javascript():
+
+    return FileResponse(
+        "app.js",
+        media_type="application/javascript"
+    )
+
+
+# =========================
+# HEALTH
+# =========================
 
 @app.get("/health")
 async def health():
@@ -56,6 +81,10 @@ async def health():
         "status": "ok"
     }
 
+
+# =========================
+# FLIGHTS
+# =========================
 
 @app.get("/api/flights")
 async def api_flights(
@@ -80,12 +109,18 @@ async def api_flights(
 
     except Exception as e:
 
-        print("Flight API error:", e)
+        print(
+            "Flight API error:",
+            repr(e)
+        )
 
         results = []
 
         source = "demo"
 
+
+    # Demo results if Amadeus
+    # is unavailable
 
     if not results:
 
@@ -142,6 +177,10 @@ async def api_flights(
     }
 
 
+# =========================
+# HOTELS
+# =========================
+
 @app.get("/api/hotels")
 async def api_hotels(
     city: str = "Bangkok",
@@ -165,12 +204,18 @@ async def api_hotels(
 
     except Exception as e:
 
-        print("Hotel API error:", e)
+        print(
+            "Hotel API error:",
+            repr(e)
+        )
 
         results = []
 
         source = "demo"
 
+
+    # Demo hotels if Amadeus
+    # is unavailable
 
     if not results:
 
@@ -231,28 +276,26 @@ async def api_hotels(
     }
 
 
+# =========================
+# MANIFEST
+# =========================
+
 @app.get("/manifest.webmanifest")
 async def manifest():
 
     return JSONResponse({
 
-        "name":
-            "Travel Search",
+        "name": "Travel Search",
 
-        "short_name":
-            "Travel Search",
+        "short_name": "Travel Search",
 
-        "start_url":
-            "/",
+        "start_url": "/",
 
-        "display":
-            "standalone",
+        "display": "standalone",
 
-        "background_color":
-            "#f4f6f8",
+        "background_color": "#f4f6f8",
 
-        "theme_color":
-            "#111827",
+        "theme_color": "#111827",
 
         "icons": []
 
