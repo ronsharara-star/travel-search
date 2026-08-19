@@ -1,55 +1,217 @@
-let currency = "ILS";
+"use strict";
 
-let map = null;
 
-let markers = [];
+/* =========================
+   GLOBAL DATA
+========================= */
 
 let flightData = [];
 
 let hotelData = [];
 
-const $ = id => document.getElementById(id);
+let map = null;
+
+let hotelMarkers = [];
+
+let mapReady = false;
 
 
 /* =========================
    CURRENCY
 ========================= */
 
-const rates = {
-  USD: 1,
-  ILS: 3.2,
-  THB: 32,
-  EUR: 0.86,
-  GBP: 0.74,
-  JPY: 147,
-  CAD: 1.38,
-  AUD: 1.52,
-  CHF: 0.79,
-  SGD: 1.28
+const currencyRates = {
+
+    EUR: 1,
+
+    ILS: 4.05,
+
+    USD: 1.09,
+
+    THB: 38.5,
+
+    GBP: 0.86,
+
+    JPY: 171,
+
+    CAD: 1.49,
+
+    AUD: 1.65,
+
+    CHF: 0.95,
+
+    SGD: 1.46
+
 };
 
-const sym = {
-  USD: "$",
-  ILS: "₪",
-  THB: "฿",
-  EUR: "€",
-  GBP: "£",
-  JPY: "¥",
-  CAD: "$",
-  AUD: "A$",
-  CHF: "CHF ",
-  SGD: "S$"
+
+const currencySymbols = {
+
+    ILS: "₪",
+
+    USD: "$",
+
+    THB: "฿",
+
+    EUR: "€",
+
+    GBP: "£",
+
+    JPY: "¥",
+
+    CAD: "C$",
+
+    AUD: "A$",
+
+    CHF: "CHF",
+
+    SGD: "S$"
+
 };
 
-function money(value) {
 
-  const n = Number(value) || 0;
+/* =========================
+   HELPERS
+========================= */
 
-  return (
-    sym[currency] || ""
-  ) + Math.round(
-    n * rates[currency]
-  ).toLocaleString();
+function $(id) {
+
+    return document.getElementById(id);
+
+}
+
+
+function escapeHtml(value) {
+
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+
+function todayString() {
+
+    const date = new Date();
+
+    const offset =
+        date.getTimezoneOffset();
+
+    const local =
+        new Date(
+            date.getTime()
+            -
+            offset * 60000
+        );
+
+    return local
+        .toISOString()
+        .slice(0, 10);
+
+}
+
+
+function tomorrowString() {
+
+    const date =
+        new Date();
+
+    date.setDate(
+        date.getDate() + 1
+    );
+
+    const offset =
+        date.getTimezoneOffset();
+
+    const local =
+        new Date(
+            date.getTime()
+            -
+            offset * 60000
+        );
+
+    return local
+        .toISOString()
+        .slice(0, 10);
+
+}
+
+
+function convertFromEUR(
+    value,
+    currency
+) {
+
+    const rate =
+        currencyRates[currency]
+        || 1;
+
+    return Number(value || 0)
+        * rate;
+
+}
+
+
+function formatMoney(
+    value,
+    originalCurrency = "EUR"
+) {
+
+    const currency =
+        $("currency").value;
+
+    let eurValue =
+        Number(value || 0);
+
+
+    if (
+        originalCurrency
+        !== "EUR"
+        &&
+        currencyRates[
+            originalCurrency
+        ]
+    ) {
+
+        eurValue =
+            eurValue
+            /
+            currencyRates[
+                originalCurrency
+            ];
+
+    }
+
+
+    const converted =
+        convertFromEUR(
+            eurValue,
+            currency
+        );
+
+
+    const symbol =
+        currencySymbols[
+            currency
+        ] || currency;
+
+
+    return (
+        symbol
+        +
+        converted.toLocaleString(
+            "en-US",
+            {
+                maximumFractionDigits:
+                    currency === "JPY"
+                    ? 0
+                    : 0
+            }
+        )
+    );
 
 }
 
@@ -58,26 +220,23 @@ function money(value) {
    LOADING
 ========================= */
 
-function showLoading(text = "מחפש...") {
+function showLoading(
+    text = "מחפש..."
+) {
 
-  const loading = $("loading");
+    $("loadingText")
+        .textContent = text;
 
-  if (!loading) return;
-
-  $("loadingText").textContent = text;
-
-  loading.hidden = false;
+    $("loading")
+        .hidden = false;
 
 }
 
 
 function hideLoading() {
 
-  const loading = $("loading");
-
-  if (!loading) return;
-
-  loading.hidden = true;
+    $("loading")
+        .hidden = true;
 
 }
 
@@ -86,407 +245,615 @@ function hideLoading() {
    TABS
 ========================= */
 
-$("fb").onclick = () => {
+function showFlights() {
 
-  $("flights").hidden = false;
+    $("flights")
+        .hidden = false;
 
-  $("hotels").hidden = true;
+    $("hotels")
+        .hidden = true;
 
-  $("fb").classList.add("active");
+    $("fb")
+        .classList.add("active");
 
-  $("hb").classList.remove("active");
+    $("hb")
+        .classList.remove("active");
 
-};
+}
 
 
-$("hb").onclick = () => {
+function showHotels() {
 
-  $("flights").hidden = true;
+    $("flights")
+        .hidden = true;
 
-  $("hotels").hidden = false;
+    $("hotels")
+        .hidden = false;
 
-  $("fb").classList.remove("active");
+    $("fb")
+        .classList.remove("active");
 
-  $("hb").classList.add("active");
+    $("hb")
+        .classList.add("active");
 
-  setTimeout(() => {
 
-    if (map) {
+    setTimeout(
+        () => {
 
-      map.invalidateSize();
+            if (map) {
+
+                map.invalidateSize();
+
+            }
+
+        },
+        200
+    );
+
+}
+
+
+$("fb")
+    .addEventListener(
+        "click",
+        showFlights
+    );
+
+
+$("hb")
+    .addEventListener(
+        "click",
+        showHotels
+    );
+
+
+/* =========================
+   FLIGHTS SEARCH
+========================= */
+
+async function searchFlights() {
+
+    const origin =
+        $("from")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const destination =
+        $("to")
+            .value
+            .trim()
+            .toUpperCase();
+
+
+    const departure =
+        $("dep")
+            .value;
+
+
+    const returnDate =
+        $("ret")
+            .value;
+
+
+    const adults =
+        Number(
+            $("adults")
+                .value
+        ) || 1;
+
+
+    if (!origin) {
+
+        alert(
+            "נא להזין שדה מוצא"
+        );
+
+        return;
 
     }
 
-  }, 300);
 
-};
+    if (!destination) {
 
+        alert(
+            "נא להזין יעד"
+        );
 
-/* =========================
-   CURRENCY
-========================= */
-
-$("currency").onchange = e => {
-
-  currency = e.target.value;
-
-  renderFlights();
-
-  renderHotels();
-
-  renderMap();
-
-};
-
-
-/* =========================
-   FLIGHT SEARCH
-========================= */
-
-$("fs").onclick = async () => {
-
-  showLoading("מחפש טיסות...");
-
-  try {
-
-    const origin =
-      $("from").value.trim();
-
-    const destination =
-      $("to").value.trim();
-
-    const departure =
-      $("dep").value;
-
-    const returnDate =
-      $("ret").value;
-
-    const adults =
-      $("adults").value;
-
-
-    if (!origin || !destination) {
-
-      alert("נא להזין מוצא ויעד");
-
-      return;
+        return;
 
     }
 
 
     if (!departure) {
 
-      alert("נא לבחור תאריך יציאה");
+        alert(
+            "נא לבחור תאריך יציאה"
+        );
 
-      return;
+        return;
 
     }
 
 
-    const params =
-      new URLSearchParams({
+    if (
+        returnDate
+        &&
+        returnDate < departure
+    ) {
 
-        origin,
+        alert(
+            "תאריך החזרה חייב להיות אחרי תאריך היציאה"
+        );
 
-        destination,
+        return;
 
-        departure,
-
-        return_date: returnDate,
-
-        adults
-
-      });
+    }
 
 
-    const response =
-      await fetch(
-        "/api/flights?" +
-        params.toString(),
-        {
-          cache: "no-store"
+    showLoading(
+        "מחפש טיסות..."
+    );
+
+
+    try {
+
+        const params =
+            new URLSearchParams({
+
+                origin,
+
+                destination,
+
+                departure,
+
+                return_date:
+                    returnDate,
+
+                adults:
+                    String(adults)
+
+            });
+
+
+        const response =
+            await fetch(
+                `/api/flights?${params}`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Flight search failed"
+            );
+
         }
-      );
 
 
-    if (!response.ok) {
+        const data =
+            await response.json();
 
-      throw new Error(
-        "Flight server error"
-      );
+
+        flightData =
+            Array.isArray(
+                data.results
+            )
+            ? data.results
+            : [];
+
+
+        $("flightFilters")
+            .hidden =
+            flightData.length === 0;
+
+
+        renderFlights();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        $("flightResults")
+            .innerHTML = `
+
+                <div class="errorBox">
+
+                    ❌ לא הצלחנו לבצע את החיפוש.
+
+                </div>
+
+            `;
+
+    } finally {
+
+        hideLoading();
 
     }
-
-
-    const data =
-      await response.json();
-
-
-    flightData =
-      data.results || [];
-
-
-    populateAirlines();
-
-
-    $("flightFilters").hidden =
-      flightData.length === 0;
-
-
-    renderFlights();
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    $("flightResults").innerHTML = `
-      <div class="card">
-        ⚠️ הייתה בעיה בחיפוש הטיסות.
-        <br>
-        נסה שוב בעוד כמה שניות.
-      </div>
-    `;
-
-  } finally {
-
-    hideLoading();
-
-  }
-
-};
-
-
-/* =========================
-   AIRLINES
-========================= */
-
-function populateAirlines() {
-
-  const select =
-    $("airlineFilter");
-
-  const airlines =
-    [...new Set(
-      flightData
-        .map(x => x.airline)
-        .filter(Boolean)
-    )]
-    .sort();
-
-
-  select.innerHTML =
-    `<option value="all">
-      כל חברות התעופה
-    </option>`;
-
-
-  airlines.forEach(airline => {
-
-    const option =
-      document.createElement("option");
-
-    option.value = airline;
-
-    option.textContent = airline;
-
-    select.appendChild(option);
-
-  });
 
 }
 
 
-/* =========================
-   FLIGHT FILTERS
-========================= */
-
-function getFilteredFlights() {
-
-  let results =
-    [...flightData];
-
-
-  const airline =
-    $("airlineFilter").value;
-
-  const stops =
-    $("stopsFilter").value;
-
-  const maxPrice =
-    Number(
-      $("maxFlightPrice").value
+$("fs")
+    .addEventListener(
+        "click",
+        searchFlights
     );
-
-
-  if (airline !== "all") {
-
-    results =
-      results.filter(
-        x => x.airline === airline
-      );
-
-  }
-
-
-  if (stops !== "all") {
-
-    if (stops === "2") {
-
-      results =
-        results.filter(
-          x => Number(x.stops) >= 2
-        );
-
-    } else {
-
-      results =
-        results.filter(
-          x =>
-            Number(x.stops) ===
-            Number(stops)
-        );
-
-    }
-
-  }
-
-
-  if (maxPrice > 0) {
-
-    results =
-      results.filter(
-        x =>
-          Number(x.price) <=
-          maxPrice
-      );
-
-  }
-
-
-  const sort =
-    $("sortFlights").value;
-
-
-  if (sort === "priceAsc") {
-
-    results.sort(
-      (a,b) =>
-        Number(a.price) -
-        Number(b.price)
-    );
-
-  }
-
-
-  if (sort === "priceDesc") {
-
-    results.sort(
-      (a,b) =>
-        Number(b.price) -
-        Number(a.price)
-    );
-
-  }
-
-
-  return results;
-
-}
 
 
 /* =========================
-   RENDER FLIGHTS
+   FLIGHT RENDER
 ========================= */
 
 function renderFlights() {
 
-  const results =
-    getFilteredFlights();
+    const search =
+        $("flightSearch")
+            .value
+            .trim()
+            .toLowerCase();
 
 
-  $("flightCount").textContent =
-    `${results.length} טיסות נמצאו`;
+    const sort =
+        $("sortFlights")
+            .value;
 
 
-  if (!results.length) {
-
-    $("flightResults").innerHTML = `
-      <div class="card">
-        לא נמצאו טיסות לפי הסינון שבחרת.
-      </div>
-    `;
-
-    return;
-
-  }
+    const stops =
+        $("stopsFilter")
+            .value;
 
 
-  $("flightResults").innerHTML =
-    results.map(x => {
+    const maxPrice =
+        Number(
+            $("maxFlightPrice")
+                .value
+        ) || Infinity;
 
-      const stops =
-        Number(x.stops) || 0;
+
+    let results =
+        flightData.filter(
+            flight => {
+
+                const airline =
+                    String(
+                        flight.airline
+                        || ""
+                    )
+                    .toLowerCase();
 
 
-      const stopText =
+                const matchesSearch =
+                    !search
+                    ||
+                    airline.includes(
+                        search
+                    );
+
+
+                let matchesStops =
+                    true;
+
+
+                if (
+                    stops !== "all"
+                ) {
+
+                    if (
+                        stops === "2"
+                    ) {
+
+                        matchesStops =
+                            Number(
+                                flight.stops
+                                || 0
+                            ) >= 2;
+
+                    } else {
+
+                        matchesStops =
+                            Number(
+                                flight.stops
+                                || 0
+                            )
+                            ===
+                            Number(
+                                stops
+                            );
+
+                    }
+
+                }
+
+
+                const price =
+                    convertFromEUR(
+                        flight.price,
+                        $("currency").value
+                    );
+
+
+                const matchesPrice =
+                    price <= maxPrice;
+
+
+                return (
+                    matchesSearch
+                    &&
+                    matchesStops
+                    &&
+                    matchesPrice
+                );
+
+            }
+        );
+
+
+    results.sort(
+        (a, b) => {
+
+            if (
+                sort ===
+                "priceAsc"
+            ) {
+
+                return (
+                    Number(a.price || 0)
+                    -
+                    Number(b.price || 0)
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "priceDesc"
+            ) {
+
+                return (
+                    Number(b.price || 0)
+                    -
+                    Number(a.price || 0)
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "durationAsc"
+            ) {
+
+                return (
+                    Number(
+                        a.duration_minutes
+                        || 99999
+                    )
+                    -
+                    Number(
+                        b.duration_minutes
+                        || 99999
+                    )
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "stopsAsc"
+            ) {
+
+                return (
+                    Number(
+                        a.stops || 0
+                    )
+                    -
+                    Number(
+                        b.stops || 0
+                    )
+                );
+
+            }
+
+
+            return 0;
+
+        }
+    );
+
+
+    if (!results.length) {
+
+        $("flightResults")
+            .innerHTML = `
+
+                <div class="emptyBox">
+
+                    אין טיסות התואמות את הסינון.
+
+                </div>
+
+            `;
+
+        return;
+
+    }
+
+
+    $("flightResults")
+        .innerHTML = results
+        .map(
+            renderFlight
+        )
+        .join("");
+
+}
+
+
+function renderFlight(
+    flight
+) {
+
+    const stops =
+        Number(
+            flight.stops || 0
+        );
+
+
+    const stopText =
         stops === 0
-          ? "טיסה ישירה"
-          : stops === 1
-          ? "עצירה אחת"
-          : `${stops} עצירות`;
+        ? "ישירה"
+        : `${stops} עצירות`;
 
 
-      return `
+    const returnText =
+        flight.return_duration
+        ? `↩️ חזור: ${escapeHtml(
+            flight.return_duration
+        )}`
+        : "";
 
-      <div class="card">
 
-        <div class="row">
+    return `
 
-          <div>
+        <article class="flightCard">
 
-            <b>
-              ✈️ ${x.airline || "Airline"}
-            </b>
+            <div class="flightTop">
 
-            <div>
-              ${x.origin || ""}
-              →
-              ${x.destination || ""}
+                <div>
+
+                    <div class="airlineName">
+
+                        ✈️
+
+                        ${escapeHtml(
+                            flight.airline
+                            || "Airline"
+                        )}
+
+                    </div>
+
+
+                    <div class="flightNumber">
+
+                        ${escapeHtml(
+                            flight.flight_number
+                            || ""
+                        )}
+
+                    </div>
+
+                </div>
+
+
+                <div class="price">
+
+                    ${formatMoney(
+                        flight.price,
+                        flight.currency
+                    )}
+
+                </div>
+
             </div>
 
-            <div class="muted">
-              ${x.departure || ""}
-              →
-              ${x.arrival || ""}
+
+            <div class="flightRoute">
+
+                <div class="airport">
+
+                    <strong>
+                        ${escapeHtml(
+                            flight.origin
+                        )}
+                    </strong>
+
+                    <span>
+                        ${escapeHtml(
+                            flight.departure
+                        )}
+                    </span>
+
+                </div>
+
+
+                <div class="routeLine">
+
+                    <div>
+                        ✈️
+                    </div>
+
+                    <span>
+                        ${escapeHtml(
+                            flight.duration
+                            || "—"
+                        )}
+                    </span>
+
+                    <small>
+                        ${escapeHtml(
+                            stopText
+                        )}
+                    </small>
+
+                </div>
+
+
+                <div class="airport">
+
+                    <strong>
+                        ${escapeHtml(
+                            flight.destination
+                        )}
+                    </strong>
+
+                    <span>
+                        ${escapeHtml(
+                            flight.arrival
+                        )}
+                    </span>
+
+                </div>
+
             </div>
 
-          </div>
 
-          <div class="price">
-            ${money(x.price)}
-          </div>
+            <div class="flightDetails">
 
-        </div>
+                <span>
+                    ⏱️ משך:
+                    ${escapeHtml(
+                        flight.duration
+                        || "—"
+                    )}
+                </span>
 
 
-        <div class="flightDetails">
+                <span>
+                    🔄 ${escapeHtml(
+                        stopText
+                    )}
+                </span>
 
-          <span class="badge">
-            🛫 ${stopText}
-          </span>
 
-          <span class="badge">
-            💰 ${money(x.price)}
-          </span>
+                <span>
+                    ${escapeHtml(
+                        returnText
+                    )}
+                </span>
 
-        </div>
+            </div>
 
-      </div>
+        </article>
 
-      `;
-
-    }).join("");
+    `;
 
 }
 
@@ -496,399 +863,551 @@ function renderFlights() {
 ========================= */
 
 [
-  "airlineFilter",
-  "sortFlights",
-  "stopsFilter",
-  "maxFlightPrice"
-].forEach(id => {
+    "flightSearch",
+    "sortFlights",
+    "stopsFilter",
+    "maxFlightPrice"
+].forEach(
+    id => {
 
-  $(id).addEventListener(
-    "input",
-    renderFlights
-  );
+        $(id)
+            .addEventListener(
+                "input",
+                renderFlights
+            );
 
-  $(id).addEventListener(
-    "change",
-    renderFlights
-  );
+        $(id)
+            .addEventListener(
+                "change",
+                renderFlights
+            );
 
-});
-
-
-$("clearFlightFilters").onclick =
-  () => {
-
-    $("airlineFilter").value =
-      "all";
-
-    $("sortFlights").value =
-      "priceAsc";
-
-    $("stopsFilter").value =
-      "all";
-
-    $("maxFlightPrice").value =
-      "";
-
-    renderFlights();
-
-  };
+    }
+);
 
 
 /* =========================
-   HOTEL SEARCH
+   HOTELS SEARCH
 ========================= */
 
-$("hs").onclick = async () => {
-
-  showLoading("מחפש מלונות...");
-
-  try {
+async function searchHotels() {
 
     const city =
-      $("city").value.trim();
+        $("city")
+            .value
+            .trim();
+
 
     const checkin =
-      $("checkin").value;
+        $("checkin")
+            .value;
+
 
     const checkout =
-      $("checkout").value;
+        $("checkout")
+            .value;
+
 
     const guests =
-      $("guests").value;
+        Number(
+            $("guests")
+                .value
+        ) || 1;
+
 
     const rooms =
-      $("rooms").value;
+        Number(
+            $("rooms")
+                .value
+        ) || 1;
 
 
     if (!city) {
 
-      alert("נא להזין עיר");
+        alert(
+            "נא להזין יעד"
+        );
 
-      return;
-
-    }
-
-
-    if (!checkin || !checkout) {
-
-      alert(
-        "נא לבחור תאריך כניסה ויציאה"
-      );
-
-      return;
+        return;
 
     }
 
 
-    const params =
-      new URLSearchParams({
+    if (!checkin) {
 
-        city,
+        alert(
+            "נא לבחור תאריך כניסה"
+        );
 
-        checkin,
+        return;
 
-        checkout,
-
-        guests,
-
-        rooms
-
-      });
+    }
 
 
-    const response =
-      await fetch(
-        "/api/hotels?" +
-        params.toString(),
-        {
-          cache: "no-store"
+    if (!checkout) {
+
+        alert(
+            "נא לבחור תאריך יציאה"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        checkout <= checkin
+    ) {
+
+        alert(
+            "תאריך היציאה חייב להיות אחרי תאריך הכניסה"
+        );
+
+        return;
+
+    }
+
+
+    showLoading(
+        "מחפש מלונות..."
+    );
+
+
+    try {
+
+        const params =
+            new URLSearchParams({
+
+                city,
+
+                checkin,
+
+                checkout,
+
+                guests:
+                    String(guests),
+
+                rooms:
+                    String(rooms)
+
+            });
+
+
+        const response =
+            await fetch(
+                `/api/hotels?${params}`
+            );
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Hotel search failed"
+            );
+
         }
-      );
 
 
-    if (!response.ok) {
+        const data =
+            await response.json();
 
-      throw new Error(
-        "Hotel server error"
-      );
+
+        hotelData =
+            Array.isArray(
+                data.results
+            )
+            ? data.results
+            : [];
+
+
+        $("hotelFilters")
+            .hidden =
+            hotelData.length === 0;
+
+
+        renderHotels();
+
+        updateMap();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        $("hotelResults")
+            .innerHTML = `
+
+                <div class="errorBox">
+
+                    ❌ לא הצלחנו לבצע את חיפוש המלונות.
+
+                </div>
+
+            `;
+
+    } finally {
+
+        hideLoading();
 
     }
-
-
-    const data =
-      await response.json();
-
-
-    hotelData =
-      data.results || [];
-
-
-    $("hotelFilters").hidden =
-      hotelData.length === 0;
-
-
-    renderHotels();
-
-    renderMap();
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    $("hotelResults").innerHTML = `
-      <div class="card">
-        ⚠️ הייתה בעיה בחיפוש המלונות.
-        <br>
-        נסה שוב בעוד כמה שניות.
-      </div>
-    `;
-
-  } finally {
-
-    hideLoading();
-
-  }
-
-};
-
-
-/* =========================
-   HOTEL FILTERS
-========================= */
-
-function getFilteredHotels() {
-
-  let results =
-    [...hotelData];
-
-
-  const search =
-    $("hotelSearch").value
-      .trim()
-      .toLowerCase();
-
-
-  const minRating =
-    Number(
-      $("minRating").value
-    );
-
-
-  const maxPrice =
-    Number(
-      $("maxPrice").value
-    );
-
-
-  const breakfast =
-    $("breakfastFilter").checked;
-
-
-  const cancel =
-    $("cancelFilter").checked;
-
-
-  if (search) {
-
-    results =
-      results.filter(x =>
-        String(x.name || "")
-          .toLowerCase()
-          .includes(search)
-      );
-
-  }
-
-
-  if (minRating > 0) {
-
-    results =
-      results.filter(
-        x =>
-          Number(x.rating) >=
-          minRating
-      );
-
-  }
-
-
-  if (maxPrice > 0) {
-
-    results =
-      results.filter(
-        x =>
-          Number(x.price) <=
-          maxPrice
-      );
-
-  }
-
-
-  if (breakfast) {
-
-    results =
-      results.filter(
-        x => x.breakfast === true
-      );
-
-  }
-
-
-  if (cancel) {
-
-    results =
-      results.filter(
-        x => x.free_cancel === true
-      );
-
-  }
-
-
-  const sort =
-    $("sortHotels").value;
-
-
-  if (sort === "priceAsc") {
-
-    results.sort(
-      (a,b) =>
-        Number(a.price) -
-        Number(b.price)
-    );
-
-  }
-
-
-  if (sort === "priceDesc") {
-
-    results.sort(
-      (a,b) =>
-        Number(b.price) -
-        Number(a.price)
-    );
-
-  }
-
-
-  if (sort === "ratingDesc") {
-
-    results.sort(
-      (a,b) =>
-        Number(b.rating) -
-        Number(a.rating)
-    );
-
-  }
-
-
-  if (sort === "reviewsDesc") {
-
-    results.sort(
-      (a,b) =>
-        Number(b.reviews) -
-        Number(a.reviews)
-    );
-
-  }
-
-
-  return results;
 
 }
 
 
+$("hs")
+    .addEventListener(
+        "click",
+        searchHotels
+    );
+
+
 /* =========================
-   RENDER HOTELS
+   HOTEL RENDER
 ========================= */
 
 function renderHotels() {
 
-  const results =
-    getFilteredHotels();
+    const search =
+        $("hotelSearch")
+            .value
+            .trim()
+            .toLowerCase();
 
 
-  $("hotelCount").textContent =
-    `${results.length} מלונות נמצאו`;
+    const minRating =
+        Number(
+            $("minRating")
+                .value
+        ) || 0;
 
 
-  if (!results.length) {
+    const maxPriceInput =
+        Number(
+            $("maxPrice")
+                .value
+        );
 
-    $("hotelResults").innerHTML = `
-      <div class="card">
-        לא נמצאו מלונות לפי הסינון.
-      </div>
+
+    const maxPrice =
+        maxPriceInput > 0
+        ? maxPriceInput
+        : Infinity;
+
+
+    const breakfast =
+        $("breakfastFilter")
+            .checked;
+
+
+    const cancel =
+        $("cancelFilter")
+            .checked;
+
+
+    const sort =
+        $("sortHotels")
+            .value;
+
+
+    let results =
+        hotelData.filter(
+            hotel => {
+
+                const name =
+                    String(
+                        hotel.name
+                        || ""
+                    )
+                    .toLowerCase();
+
+
+                const rating =
+                    Number(
+                        hotel.rating
+                        || 0
+                    );
+
+
+                const price =
+                    convertFromEUR(
+                        hotel.price,
+                        hotel.currency
+                    );
+
+
+                if (
+                    search
+                    &&
+                    !name.includes(
+                        search
+                    )
+                ) {
+
+                    return false;
+
+                }
+
+
+                if (
+                    rating < minRating
+                ) {
+
+                    return false;
+
+                }
+
+
+                if (
+                    price > maxPrice
+                ) {
+
+                    return false;
+
+                }
+
+
+                if (
+                    breakfast
+                    &&
+                    !hotel.breakfast
+                ) {
+
+                    return false;
+
+                }
+
+
+                if (
+                    cancel
+                    &&
+                    !hotel.free_cancel
+                ) {
+
+                    return false;
+
+                }
+
+
+                return true;
+
+            }
+        );
+
+
+    results.sort(
+        (a, b) => {
+
+            if (
+                sort ===
+                "priceAsc"
+            ) {
+
+                return (
+                    Number(a.price || 0)
+                    -
+                    Number(b.price || 0)
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "priceDesc"
+            ) {
+
+                return (
+                    Number(b.price || 0)
+                    -
+                    Number(a.price || 0)
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "ratingDesc"
+            ) {
+
+                return (
+                    Number(b.rating || 0)
+                    -
+                    Number(a.rating || 0)
+                );
+
+            }
+
+
+            if (
+                sort ===
+                "reviewsDesc"
+            ) {
+
+                return (
+                    Number(b.reviews || 0)
+                    -
+                    Number(a.reviews || 0)
+                );
+
+            }
+
+
+            return 0;
+
+        }
+    );
+
+
+    if (!results.length) {
+
+        $("hotelResults")
+            .innerHTML = `
+
+                <div class="emptyBox">
+
+                    אין מלונות התואמים את הסינון.
+
+                </div>
+
+            `;
+
+        return;
+
+    }
+
+
+    $("hotelResults")
+        .innerHTML = results
+        .map(
+            renderHotel
+        )
+        .join("");
+
+}
+
+
+function renderHotel(
+    hotel
+) {
+
+    const rating =
+        Number(
+            hotel.rating || 0
+        );
+
+
+    const stars =
+        rating > 0
+        ? "⭐ " + rating.toFixed(1)
+        : "⭐ ללא דירוג";
+
+
+    const breakfast =
+        hotel.breakfast
+        ? "🍳 ארוחת בוקר"
+        : "";
+
+
+    const cancel =
+        hotel.free_cancel
+        ? "✓ ביטול חינם"
+        : "";
+
+
+    return `
+
+        <article
+            class="hotelCard"
+            data-hotel-id="${escapeHtml(
+                hotel.id || ""
+            )}"
+        >
+
+            <div class="hotelTop">
+
+                <div>
+
+                    <h3>
+                        ${escapeHtml(
+                            hotel.name
+                        )}
+                    </h3>
+
+
+                    <div class="rating">
+
+                        ${stars}
+
+                        ${
+                            hotel.reviews
+                            ? `(${Number(
+                                hotel.reviews
+                            ).toLocaleString()})`
+                            : ""
+                        }
+
+                    </div>
+
+                </div>
+
+
+                <div class="price">
+
+                    ${formatMoney(
+                        hotel.price,
+                        hotel.currency
+                    )}
+
+                    <small>
+                        ללילה / הצעה
+                    </small>
+
+                </div>
+
+            </div>
+
+
+            <div class="hotelFeatures">
+
+                ${
+                    breakfast
+                    ? `<span>${breakfast}</span>`
+                    : ""
+                }
+
+
+                ${
+                    cancel
+                    ? `<span>${cancel}</span>`
+                    : ""
+                }
+
+            </div>
+
+
+            ${
+                hotel.room
+                ? `
+                    <div class="roomInfo">
+
+                        🛏️
+
+                        ${escapeHtml(
+                            hotel.room
+                        )}
+
+                    </div>
+                `
+                : ""
+            }
+
+        </article>
+
     `;
-
-    renderMap();
-
-    return;
-
-  }
-
-
-  $("hotelResults").innerHTML =
-    results.map(x => `
-
-      <div class="card">
-
-        <div class="row">
-
-          <div>
-
-            <b>
-              🏨 ${x.name || "Hotel"}
-            </b>
-
-            <div>
-              ⭐ ${x.rating || 0}
-            </div>
-
-            <div class="muted">
-              ${x.reviews || 0}
-              reviews
-            </div>
-
-            <div class="flightDetails">
-
-              ${
-                x.breakfast
-                  ? `<span class="badge">
-                       🍳 ארוחת בוקר
-                     </span>`
-                  : ""
-              }
-
-              ${
-                x.free_cancel
-                  ? `<span class="badge">
-                       ✓ ביטול חינם
-                     </span>`
-                  : ""
-              }
-
-            </div>
-
-          </div>
-
-
-          <div class="price">
-
-            ${money(x.price)}
-
-            <div class="muted">
-              / night
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-
-    `).join("");
-
 
 }
 
@@ -898,313 +1417,584 @@ function renderHotels() {
 ========================= */
 
 [
-  "hotelSearch",
-  "sortHotels",
-  "minRating",
-  "maxPrice",
-  "breakfastFilter",
-  "cancelFilter"
-].forEach(id => {
+    "hotelSearch",
+    "sortHotels",
+    "minRating",
+    "maxPrice",
+    "breakfastFilter",
+    "cancelFilter"
+].forEach(
+    id => {
 
-  $(id).addEventListener(
-    "input",
-    () => {
+        $(id)
+            .addEventListener(
+                "input",
+                () => {
 
-      renderHotels();
-      renderMap();
+                    renderHotels();
+
+                    updateMap();
+
+                }
+            );
+
+
+        $(id)
+            .addEventListener(
+                "change",
+                () => {
+
+                    renderHotels();
+
+                    updateMap();
+
+                }
+            );
 
     }
-  );
-
-  $(id).addEventListener(
-    "change",
-    () => {
-
-      renderHotels();
-      renderMap();
-
-    }
-  );
-
-});
+);
 
 
 /* =========================
    MAP
 ========================= */
 
-function initMap() {
+function initializeMap() {
 
-  if (map) return;
+    if (
+        typeof L === "undefined"
+    ) {
 
+        console.error(
+            "Leaflet is not loaded"
+        );
 
-  map =
-    L.map("map").setView(
-      [13.74,100.53],
-      11
-    );
+        return;
 
-
-  L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-      maxZoom: 19,
-      attribution:
-        "&copy; OpenStreetMap"
     }
-  ).addTo(map);
+
+
+    if (map) {
+
+        return;
+
+    }
+
+
+    map =
+        L.map(
+            "map"
+        ).setView(
+            [13.7563, 100.5018],
+            11
+        );
+
+
+    L.tileLayer(
+
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+
+        {
+
+            maxZoom: 19,
+
+            attribution:
+                "&copy; OpenStreetMap"
+
+        }
+
+    ).addTo(map);
+
+
+    mapReady = true;
 
 }
 
 
-function renderMap() {
-
-  initMap();
+initializeMap();
 
 
-  markers.forEach(marker => {
+function clearMarkers() {
 
-    map.removeLayer(marker);
+    hotelMarkers.forEach(
+        marker => {
 
-  });
+            map.removeLayer(
+                marker
+            );
 
-
-  markers = [];
-
-
-  const hotels =
-    getFilteredHotels()
-      .filter(
-        x => x.lat && x.lon
-      );
-
-
-  hotels.forEach(x => {
-
-    const marker =
-      L.marker([
-        Number(x.lat),
-        Number(x.lon)
-      ])
-      .addTo(map)
-      .bindPopup(`
-
-        <b>
-          ${x.name || "Hotel"}
-        </b>
-
-        <br>
-
-        ⭐ ${x.rating || 0}
-
-        <br>
-
-        ${money(x.price)}
-        / night
-
-      `);
-
-
-    markers.push(marker);
-
-  });
-
-
-  if (hotels.length) {
-
-    map.setView(
-      [
-        Number(hotels[0].lat),
-        Number(hotels[0].lon)
-      ],
-      12
+        }
     );
 
-  }
+
+    hotelMarkers = [];
+
+}
 
 
-  setTimeout(() => {
+function updateMap() {
 
-    map.invalidateSize();
+    if (!mapReady) {
 
-  },300);
+        return;
+
+    }
+
+
+    clearMarkers();
+
+
+    const visibleHotels =
+        getFilteredHotels();
+
+
+    const bounds = [];
+
+
+    visibleHotels.forEach(
+        hotel => {
+
+            const lat =
+                Number(
+                    hotel.lat
+                );
+
+
+            const lon =
+                Number(
+                    hotel.lon
+                );
+
+
+            if (
+                !Number.isFinite(lat)
+                ||
+                !Number.isFinite(lon)
+            ) {
+
+                return;
+
+            }
+
+
+            const marker =
+                L.marker([
+                    lat,
+                    lon
+                ]).addTo(map);
+
+
+            marker.bindPopup(`
+
+                <strong>
+
+                    ${escapeHtml(
+                        hotel.name
+                    )}
+
+                </strong>
+
+                <br>
+
+                ⭐ ${Number(
+                    hotel.rating || 0
+                ).toFixed(1)}
+
+                <br>
+
+                💰 ${formatMoney(
+                    hotel.price,
+                    hotel.currency
+                )}
+
+            `);
+
+
+            hotelMarkers.push(
+                marker
+            );
+
+
+            bounds.push([
+                lat,
+                lon
+            ]);
+
+        }
+    );
+
+
+    if (bounds.length) {
+
+        map.fitBounds(
+            bounds,
+            {
+                padding: [
+                    30,
+                    30
+                ]
+            }
+        );
+
+    }
+
+}
+
+
+function getFilteredHotels() {
+
+    const search =
+        $("hotelSearch")
+            .value
+            .trim()
+            .toLowerCase();
+
+
+    const minRating =
+        Number(
+            $("minRating")
+                .value
+        ) || 0;
+
+
+    const maxInput =
+        Number(
+            $("maxPrice")
+                .value
+        );
+
+
+    const maxPrice =
+        maxInput > 0
+        ? maxInput
+        : Infinity;
+
+
+    const breakfast =
+        $("breakfastFilter")
+            .checked;
+
+
+    const cancel =
+        $("cancelFilter")
+            .checked;
+
+
+    return hotelData.filter(
+        hotel => {
+
+            const name =
+                String(
+                    hotel.name || ""
+                )
+                .toLowerCase();
+
+
+            const rating =
+                Number(
+                    hotel.rating || 0
+                );
+
+
+            const price =
+                convertFromEUR(
+                    hotel.price,
+                    hotel.currency
+                );
+
+
+            return (
+
+                (
+                    !search
+                    ||
+                    name.includes(
+                        search
+                    )
+                )
+
+                &&
+
+                rating >= minRating
+
+                &&
+
+                price <= maxPrice
+
+                &&
+
+                (
+                    !breakfast
+                    ||
+                    hotel.breakfast
+                )
+
+                &&
+
+                (
+                    !cancel
+                    ||
+                    hotel.free_cancel
+                )
+
+            );
+
+        }
+    );
 
 }
 
 
 /* =========================
-   MAP SEARCH
+   MAP SEARCH BUTTON
 ========================= */
 
-$("mapSearch").onclick =
-  async () => {
+$("mapSearch")
+    .addEventListener(
+        "click",
+        () => {
 
-    const center =
-      map
-        ? map.getCenter()
-        : null;
+            updateMap();
 
+            if (map) {
 
-    if (!center) {
+                map.invalidateSize();
 
-      alert(
-        "בצע קודם חיפוש מלונות"
-      );
+            }
 
-      return;
-
-    }
-
-
-    /*
-      בשלב הבא נחבר את הכפתור
-      לחיפוש אמיתי לפי גבולות המפה.
-    */
-
-    alert(
-      "המפה מוכנה לחיפוש באזור."
+        }
     );
 
-  };
+
+/* =========================
+   CURRENCY CHANGE
+========================= */
+
+$("currency")
+    .addEventListener(
+        "change",
+        () => {
+
+            renderFlights();
+
+            renderHotels();
+
+            updateMap();
+
+        }
+    );
 
 
 /* =========================
    LANGUAGE
 ========================= */
 
-const translations = {
+$("lang")
+    .addEventListener(
+        "change",
+        () => {
 
-  he: {
-
-    brand: "Travel Search",
-
-    title:
-      "טיסות ומלונות בכל העולם",
-
-    subtitle:
-      "מצא את הטיסה והמלון המתאימים לך במחיר הטוב ביותר",
-
-    flights:
-      "✈️ טיסות",
-
-    hotels:
-      "🏨 מלונות"
-
-  },
-
-  en: {
-
-    brand: "Travel Search",
-
-    title:
-      "Flights & Hotels Worldwide",
-
-    subtitle:
-      "Find the right flight and hotel at the best price",
-
-    flights:
-      "✈️ Flights",
-
-    hotels:
-      "🏨 Hotels"
-
-  }
-
-};
+            const lang =
+                $("lang").value;
 
 
-$("lang").onchange =
-  e => {
+            if (
+                lang === "en"
+            ) {
 
-    const lang =
-      e.target.value;
+                document.documentElement
+                    .lang = "en";
 
-    const t =
-      translations[lang];
+                document.documentElement
+                    .dir = "ltr";
 
-    $("brandText").textContent =
-      t.brand;
 
-    $("mainTitle").textContent =
-      t.title;
+                $("mainTitle")
+                    .textContent =
+                    "Flights and hotels worldwide";
 
-    $("mainSubtitle").textContent =
-      t.subtitle;
 
-    $("fb").textContent =
-      t.flights;
+                $("mainSubtitle")
+                    .textContent =
+                    "Find the right flight and hotel at the best price";
 
-    $("hb").textContent =
-      t.hotels;
 
-  };
+                $("fb")
+                    .textContent =
+                    "✈️ Flights";
+
+
+                $("hb")
+                    .textContent =
+                    "🏨 Hotels";
+
+            } else {
+
+                document.documentElement
+                    .lang = "he";
+
+                document.documentElement
+                    .dir = "rtl";
+
+
+                $("mainTitle")
+                    .textContent =
+                    "טיסות ומלונות בכל העולם";
+
+
+                $("mainSubtitle")
+                    .textContent =
+                    "מצא את הטיסה והמלון המתאימים לך במחיר הטוב ביותר";
+
+
+                $("fb")
+                    .textContent =
+                    "✈️ טיסות";
+
+
+                $("hb")
+                    .textContent =
+                    "🏨 מלונות";
+
+            }
+
+        }
+    );
 
 
 /* =========================
-   BACKGROUND
+   DEFAULT DATES
 ========================= */
 
-function updateBackground() {
+function setDefaultDates() {
 
-  const destination =
-    (
-      $("city").value ||
-      $("to").value ||
-      ""
-    )
-    .trim()
-    .toLowerCase();
+    const tomorrow =
+        tomorrowString();
 
 
-  const backgrounds = {
-
-    bangkok:
-      "https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=1600&q=80",
-
-    paris:
-      "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=1600&q=80",
-
-    tokyo:
-      "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=1600&q=80",
-
-    london:
-      "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1600&q=80",
-
-    singapore:
-      "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=1600&q=80",
-
-    dubai:
-      "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1600&q=80"
-
-  };
+    const dayAfter =
+        new Date();
 
 
-  let image =
-    backgrounds[destination];
+    dayAfter.setDate(
+        dayAfter.getDate() + 8
+    );
 
 
-  if (!image) {
-
-    image =
-      "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80";
-
-  }
+    const offset =
+        dayAfter.getTimezoneOffset();
 
 
-  $("backgroundLayer").style.backgroundImage =
-    `url("${image}")`;
+    const local =
+        new Date(
+            dayAfter.getTime()
+            -
+            offset * 60000
+        );
+
+
+    const checkout =
+        local
+            .toISOString()
+            .slice(0, 10);
+
+
+    if (!$("dep").value) {
+
+        $("dep").value =
+            tomorrow;
+
+    }
+
+
+    if (!$("ret").value) {
+
+        $("ret").value =
+            checkout;
+
+    }
+
+
+    if (!$("checkin").value) {
+
+        $("checkin").value =
+            tomorrow;
+
+    }
+
+
+    if (!$("checkout").value) {
+
+        $("checkout").value =
+            checkout;
+
+    }
 
 }
 
 
-$("city").addEventListener(
-  "change",
-  updateBackground
+setDefaultDates();
+
+
+/* =========================
+   ENTER KEY
+========================= */
+
+[
+    "from",
+    "to",
+    "dep",
+    "ret",
+    "adults"
+].forEach(
+    id => {
+
+        $(id)
+            .addEventListener(
+                "keydown",
+                event => {
+
+                    if (
+                        event.key ===
+                        "Enter"
+                    ) {
+
+                        searchFlights();
+
+                    }
+
+                }
+            );
+
+    }
 );
 
-$("to").addEventListener(
-  "change",
-  updateBackground
-);
 
-updateBackground();
+[
+    "city",
+    "checkin",
+    "checkout",
+    "guests",
+    "rooms"
+].forEach(
+    id => {
+
+        $(id)
+            .addEventListener(
+                "keydown",
+                event => {
+
+                    if (
+                        event.key ===
+                        "Enter"
+                    ) {
+
+                        searchHotels();
+
+                    }
+
+                }
+            );
+
+    }
+);
