@@ -1,418 +1,686 @@
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
+
 
 html,
 body {
-  margin: 0;
-  min-height: 100%;
-  font-family: system-ui, Arial, sans-serif;
-  color: #111827;
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    font-family:
+        Arial,
+        "Noto Sans Hebrew",
+        sans-serif;
 }
+
 
 body {
-  background: #eef2f7;
+    background: #f4f6f8;
+    color: #111827;
 }
+
 
 #backgroundLayer {
-  position: fixed;
-  inset: 0;
-  z-index: -3;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  transition: background-image 1s ease;
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background:
+        linear-gradient(
+            135deg,
+            #dbeafe,
+            #f8fafc
+        );
 }
+
 
 #backgroundOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: -2;
-  background: rgba(255,255,255,.78);
-  backdrop-filter: blur(2px);
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background:
+        rgba(
+            255,
+            255,
+            255,
+            0.78
+        );
 }
+
 
 #app {
-  min-height: 100vh;
+    min-height: 100vh;
 }
+
 
 header {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  padding: 12px 16px;
-
-  background: rgba(17,24,39,.96);
-  color: white;
+    min-height: 68px;
+    padding: 12px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: #111827;
+    color: white;
 }
+
 
 .brand {
-  font-size: 18px;
-  font-weight: 900;
+    font-size: 20px;
+    font-weight: 800;
+    display: flex;
+    gap: 8px;
+    align-items: center;
 }
+
 
 .headerControls {
-  display: flex;
-  gap: 6px;
+    display: flex;
+    gap: 8px;
 }
 
-header select {
-  padding: 7px;
-  border: 0;
-  border-radius: 9px;
+
+.headerControls select {
+    border: 0;
+    border-radius: 10px;
+    padding: 9px 10px;
+    background: white;
+    color: #111827;
 }
+
 
 .hero {
-  padding: 35px 18px 25px;
-  text-align: center;
+    padding: 42px 18px;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(17,24,39,.95),
+            rgba(30,64,175,.82)
+        );
+    color: white;
 }
+
 
 .heroContent {
-  max-width: 700px;
-  margin: auto;
+    max-width: 1050px;
+    margin: auto;
+    text-align: center;
 }
+
 
 .heroBadge {
-  font-size: 42px;
+    font-size: 36px;
+    margin-bottom: 8px;
 }
 
-h1 {
-  margin: 8px 0;
-  font-size: 30px;
+
+.hero h1 {
+    margin: 0 0 10px;
+    font-size: clamp(
+        30px,
+        7vw,
+        54px
+    );
 }
+
 
 .hero p {
-  margin: 0;
-  color: #475569;
+    margin: 0;
+    font-size: 17px;
+    opacity: .9;
 }
+
 
 .tabs {
-  display: flex;
-  gap: 8px;
-
-  max-width: 900px;
-  margin: 0 auto;
-
-  padding: 8px;
-
-  background: white;
-  border-radius: 16px 16px 0 0;
+    max-width: 1050px;
+    margin: -22px auto 20px;
+    padding: 0 14px;
+    display: flex;
+    gap: 10px;
+    position: relative;
 }
+
 
 .tab {
-  flex: 1;
-
-  padding: 14px;
-
-  border: 0;
-  border-radius: 12px;
-
-  background: #e5e7eb;
-
-  font-size: 16px;
-  font-weight: 800;
+    flex: 1;
+    border: 0;
+    padding: 15px;
+    border-radius: 14px;
+    background: white;
+    color: #374151;
+    font-size: 17px;
+    font-weight: 700;
+    box-shadow:
+        0 5px 20px
+        rgba(0,0,0,.08);
+    cursor: pointer;
 }
+
 
 .tab.active {
-  background: #111827;
-  color: white;
+    background: #2563eb;
+    color: white;
 }
 
+
 main {
-  max-width: 900px;
-  margin: auto;
+    max-width: 1050px;
+    margin: auto;
+    padding: 0 14px 60px;
 }
+
 
 .searchBox,
 .filterBox,
 .mapSection {
-  background: rgba(255,255,255,.95);
-  margin: 12px 14px;
-  padding: 16px;
-  border-radius: 16px;
-  box-shadow: 0 3px 14px rgba(0,0,0,.08);
+    background: white;
+    border-radius: 18px;
+    padding: 18px;
+    margin-bottom: 18px;
+    box-shadow:
+        0 8px 25px
+        rgba(15,23,42,.07);
 }
+
 
 .searchBox h2,
 .mapHeader h2 {
-  margin-top: 0;
+    margin-top: 0;
 }
 
-.grid,
-.filterGrid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+
+.grid {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            2,
+            minmax(0, 1fr)
+        );
+    gap: 14px;
 }
+
 
 .field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
+
 
 .field.full {
-  grid-column: 1 / -1;
+    grid-column: 1 / -1;
 }
 
+
 .field label {
-  font-weight: 700;
-  font-size: 14px;
+    font-weight: 700;
+    font-size: 14px;
 }
+
 
 .field input,
 .field select {
-  width: 100%;
-
-  padding: 13px;
-
-  border: 1px solid #d1d5db;
-  border-radius: 11px;
-
-  background: white;
-
-  font-size: 16px;
+    width: 100%;
+    min-height: 45px;
+    border: 1px solid #d1d5db;
+    border-radius: 11px;
+    padding: 10px 12px;
+    background: white;
+    font-size: 16px;
+    outline: none;
 }
+
+
+.field input:focus,
+.field select:focus {
+    border-color: #2563eb;
+}
+
 
 .search {
-  width: 100%;
-  margin-top: 14px;
-
-  padding: 15px;
-
-  border: 0;
-  border-radius: 13px;
-
-  background: #111827;
-  color: white;
-
-  font-size: 17px;
-  font-weight: 900;
+    width: 100%;
+    margin-top: 16px;
+    min-height: 52px;
+    border: 0;
+    border-radius: 13px;
+    background: #2563eb;
+    color: white;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
 }
 
-.search:disabled {
-  opacity: .7;
+
+.search:active {
+    transform: scale(.99);
 }
+
 
 .filterTitle {
-  font-size: 18px;
-  font-weight: 900;
-  margin-bottom: 14px;
+    font-size: 18px;
+    font-weight: 800;
+    margin-bottom: 14px;
 }
 
-.filterActions {
-  margin-top: 14px;
+
+.filterGrid {
+    display: grid;
+    grid-template-columns:
+        repeat(
+            4,
+            minmax(0, 1fr)
+        );
+    gap: 12px;
 }
 
-.secondaryButton {
-  padding: 10px 14px;
-
-  border: 0;
-  border-radius: 10px;
-
-  background: #e5e7eb;
-  font-weight: 800;
-}
 
 .checkFilters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-
-  margin-top: 15px;
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 15px;
 }
+
 
 .check {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
 }
 
-.resultCount {
-  margin: 12px 16px;
-  color: #475569;
-  font-weight: 700;
+
+.results {
+    display: grid;
+    gap: 14px;
 }
 
-.card {
-  background: white;
 
-  border-radius: 16px;
-
-  padding: 16px;
-
-  margin: 10px 14px;
-
-  box-shadow: 0 3px 12px rgba(0,0,0,.08);
+.flightCard,
+.hotelCard {
+    background: white;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow:
+        0 7px 22px
+        rgba(15,23,42,.08);
 }
 
-.row {
-  display: flex;
-  justify-content: space-between;
-  gap: 15px;
+
+.flightTop,
+.hotelTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
 }
+
+
+.airlineName {
+    font-size: 18px;
+    font-weight: 800;
+}
+
+
+.flightNumber {
+    margin-top: 4px;
+    color: #6b7280;
+    font-size: 13px;
+}
+
 
 .price {
-  font-size: 21px;
-  font-weight: 900;
-  white-space: nowrap;
+    font-size: 23px;
+    font-weight: 900;
+    color: #111827;
+    white-space: nowrap;
 }
 
-.muted {
-  color: #64748b;
-  font-size: 13px;
-  margin-top: 4px;
+
+.price small {
+    display: block;
+    font-size: 11px;
+    font-weight: 500;
+    color: #6b7280;
+    text-align: right;
 }
+
+
+.flightRoute {
+    margin: 20px 0;
+    display: grid;
+    grid-template-columns:
+        1fr
+        minmax(90px, 1.2fr)
+        1fr;
+    gap: 12px;
+    align-items: center;
+}
+
+
+.airport {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+
+.airport strong {
+    font-size: 23px;
+}
+
+
+.airport span {
+    color: #4b5563;
+    font-size: 20px;
+    font-weight: 800;
+}
+
+
+.routeLine {
+    text-align: center;
+    position: relative;
+    color: #2563eb;
+}
+
+
+.routeLine::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 15px;
+    border-top: 2px solid #bfdbfe;
+    z-index: 0;
+}
+
+
+.routeLine div,
+.routeLine span,
+.routeLine small {
+    position: relative;
+    z-index: 1;
+    background: white;
+}
+
+
+.routeLine div {
+    display: inline-block;
+    padding: 0 8px;
+    font-size: 18px;
+}
+
+
+.routeLine span {
+    display: block;
+    width: max-content;
+    max-width: 100%;
+    margin: 6px auto;
+    padding: 0 7px;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+
+.routeLine small {
+    display: inline-block;
+    padding: 3px 7px;
+    color: #374151;
+    font-size: 11px;
+}
+
 
 .flightDetails {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    color: #4b5563;
+    font-size: 13px;
 }
 
-.badge {
-  display: inline-block;
 
-  padding: 5px 9px;
-
-  border-radius: 999px;
-
-  background: #eef2ff;
-
-  font-size: 12px;
-  font-weight: 800;
+.hotelCard h3 {
+    margin: 0 0 7px;
+    font-size: 19px;
 }
 
-.mapSection {
-  padding: 0;
-  overflow: hidden;
+
+.rating {
+    color: #92400e;
+    font-weight: 700;
 }
+
+
+.hotelFeatures {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+
+.hotelFeatures span {
+    background: #ecfdf5;
+    color: #065f46;
+    padding: 7px 10px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+
+.roomInfo {
+    margin-top: 13px;
+    padding-top: 12px;
+    border-top: 1px solid #e5e7eb;
+    color: #4b5563;
+    font-size: 13px;
+}
+
 
 .mapHeader {
-  padding: 15px;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
 }
 
-.mapHeader h2 {
-  margin: 0;
-}
 
 .mapSearchButton {
-  border: 0;
-  border-radius: 10px;
-
-  padding: 10px 12px;
-
-  background: #111827;
-  color: white;
-
-  font-weight: 800;
+    border: 0;
+    border-radius: 10px;
+    padding: 10px 13px;
+    background: #111827;
+    color: white;
+    cursor: pointer;
 }
+
 
 #map {
-  height: 430px;
-  width: 100%;
+    height: 420px;
+    width: 100%;
+    border-radius: 14px;
+    overflow: hidden;
 }
 
-.loading[hidden] {
-  display: none !important;
+
+.emptyBox,
+.errorBox {
+    padding: 22px;
+    background: white;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow:
+        0 6px 20px
+        rgba(0,0,0,.06);
 }
+
+
+.errorBox {
+    color: #991b1b;
+    background: #fef2f2;
+}
+
 
 .loading {
-  position: fixed;
-  inset: 0;
-
-  z-index: 99999;
-
-  display: flex;
-
-  flex-direction: column;
-
-  justify-content: center;
-  align-items: center;
-
-  gap: 15px;
-
-  background: rgba(0,0,0,.42);
-
-  backdrop-filter: blur(4px);
-
-  color: white;
-
-  font-size: 20px;
-  font-weight: 900;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background:
+        rgba(
+            17,
+            24,
+            39,
+            .72
+        );
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    color: white;
+    font-weight: 800;
 }
+
 
 .spinner {
-  width: 45px;
-  height: 45px;
-
-  border: 5px solid rgba(255,255,255,.4);
-  border-top-color: white;
-
-  border-radius: 50%;
-
-  animation: spin .8s linear infinite;
+    width: 48px;
+    height: 48px;
+    border: 5px solid rgba(255,255,255,.35);
+    border-top-color: white;
+    border-radius: 50%;
+    animation:
+        spin .8s linear infinite;
 }
+
 
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+
+    to {
+        transform: rotate(360deg);
+    }
+
 }
 
-.leaflet-popup-content {
-  font-size: 14px;
+
+@media (
+    max-width: 760px
+) {
+
+    header {
+        align-items: flex-start;
+    }
+
+
+    .headerControls {
+        flex-direction: column;
+        width: 120px;
+    }
+
+
+    .grid,
+    .filterGrid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .field.full {
+        grid-column: auto;
+    }
+
+
+    .flightRoute {
+        grid-template-columns:
+            1fr
+            .8fr
+            1fr;
+    }
+
+
+    .airport strong {
+        font-size: 19px;
+    }
+
+
+    .airport span {
+        font-size: 17px;
+    }
+
+
+    .price {
+        font-size: 19px;
+    }
+
+
+    .mapHeader {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    #map {
+        height: 350px;
+    }
+
 }
 
-@media (max-width: 600px) {
 
-  header {
-    align-items: flex-start;
-  }
+@media (
+    max-width: 430px
+) {
 
-  .headerControls {
-    flex-direction: column;
-  }
+    .hero {
+        padding: 32px 15px;
+    }
 
-  .grid,
-  .filterGrid {
-    grid-template-columns: 1fr;
-  }
 
-  .field.full {
-    grid-column: auto;
-  }
+    .hero h1 {
+        font-size: 30px;
+    }
 
-  .hero {
-    padding-top: 25px;
-  }
 
-  h1 {
-    font-size: 25px;
-  }
+    .flightCard,
+    .hotelCard,
+    .searchBox,
+    .filterBox,
+    .mapSection {
+        padding: 14px;
+    }
 
-  .row {
-    align-items: flex-start;
-  }
 
-  .mapHeader {
-    flex-direction: column;
-    align-items: stretch;
-  }
+    .flightTop,
+    .hotelTop {
+        flex-direction: column;
+    }
 
-  #map {
-    height: 390px;
-  }
+
+    .price {
+        align-self: flex-start;
+    }
+
+
+    .flightRoute {
+        grid-template-columns:
+            1fr;
+        text-align: center;
+    }
+
+
+    .airport {
+        align-items: center;
+    }
+
+
+    .routeLine::before {
+        display: none;
+    }
+
+
+    .flightDetails {
+        flex-direction: column;
+    }
+
 }
